@@ -1,8 +1,8 @@
 from typing import Optional, List, Union
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
-from your_project.db.models import GuestModel, UserModel  # adapt to your project structure
-from your_project.schemas import GuestCreate, GuestUpdate, GuestInDB, UserInDB
+from models import GuestModel, UserModel  # adapt to your project structure
+from schemas import GuestCreate, GuestUpdate, GuestInDB, UserInDB
 
 class GuestService:
     def __init__(self, db_client: AsyncIOMotorClient):

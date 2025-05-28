@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from .event import AttendanceController
-from .schemas import AttendanceSchema
+from schemas import AttendanceSchema
 
 router = APIRouter()
 controller = AttendanceController()

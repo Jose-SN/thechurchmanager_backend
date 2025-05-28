@@ -1,8 +1,8 @@
 from fastapi import HTTPException, status, Depends
 from typing import Optional
-from your_project.schemas import OrganizationCreate, OrganizationUpdate
-from your_project.services.organization_service import OrganizationService
-from your_project.dependencies import get_current_user
+from schemas import OrganizationCreate, OrganizationUpdate
+from service import OrganizationService
+from utils import get_current_user
 
 organization_service = OrganizationService()
 

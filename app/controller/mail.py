@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from schemas.mail_template import MailTemplateBase
-from services.mail_template_service import MailTemplateService
+from mail import MailTemplateBase
+from service import MailTemplateService
 
 class MailTemplateController:
     def __init__(self):

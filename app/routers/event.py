@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, Path
-from .event import EventController
-from .schemas import EventSchema
+from controller import EventController
+from schemas import EventSchema
 
 router = APIRouter()
 controller = EventController()

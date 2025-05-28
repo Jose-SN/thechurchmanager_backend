@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from .service import EventService
-from .schemas import EventSchema
+from service import EventService
+from schemas import EventSchema
 
 service = EventService()
 

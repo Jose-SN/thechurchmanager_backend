@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import List, Optional
-from guest_schemas import GuestCreate, GuestUpdate, GuestDB
-from guest_controller import guest_controller
+from schemas import GuestCreate, GuestUpdate, GuestDB
+from controller import guest_controller
 
 router = APIRouter(prefix="/guest", tags=["Guest"])
 

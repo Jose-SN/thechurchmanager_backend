@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     JWT_EXPIRY: str = Field('30d', env='JWT_EXPIRY')
     GMAIL_USERNAME: str = Field('', env='GMAIL_USERNAME')
     GMAIL_PASS: str = Field('', env='GMAIL_PASS')
+    JWT_SECRET: str = Field('', env='JWT_SECRET')
 
     @validator('PORT', 'MONGO_URI')
     def check_required(cls, v, field):

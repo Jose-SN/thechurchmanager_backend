@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from .schemas import CheckoutSchema
-from .service import CheckoutService
-from .event import CheckoutController
+from schemas import CheckoutSchema
+from service import CheckoutService
+from controller import CheckoutController
 
 router = APIRouter()
 service = CheckoutService()

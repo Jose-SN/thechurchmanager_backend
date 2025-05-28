@@ -1,18 +1,18 @@
-from service.user_service import UserService
-from service.otp_service import OtpService
-from service.email_service import EmailService
-from service.file_service import FileService
-from service.status_service import StatusService
-from service.event_service import EventService
-from service.mail_template_service import MailTemplateService
-from service.checkout_service import CheckoutService
-from service.meeting_service import MeetingService
-from service.attendance_service import AttendanceService
-from service.dashboard_service import DashboardService
-from service.message_service import MessageService
-from service.organization_service import OrganizationService
-from service.guest_service import GuestService
-from config import GMAIL_USERNAME, GMAIL_PASS
+from user import UserService
+from otp import OtpService
+from email import EmailService
+from file import FileService
+from status import StatusService
+from event import EventService
+from mail import MailTemplateService
+from checkout import CheckoutService
+from meeting import MeetingService
+from attendance import AttendanceService
+from dashboard import DashboardService
+# from message import MessageService
+from organization import OrganizationService
+from guest import GuestService
+from core.config import GMAIL_USERNAME, GMAIL_PASS
 
 user_service = UserService()
 otp_service = OtpService()
@@ -25,6 +25,6 @@ checkout_service = CheckoutService()
 meeting_service = MeetingService()
 attendance_service = AttendanceService()
 dashboard_service = DashboardService()
-message_service = MessageService()
+# message_service = MessageService()
 organization_service = OrganizationService()
 guest_service = GuestService()

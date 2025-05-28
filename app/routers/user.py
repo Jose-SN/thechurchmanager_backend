@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Path
 from fastapi.security import OAuth2PasswordBearer
 from typing import Any
-from app.schemas.authSchema import (
+from schemas import (
     LoginSchema,
     UserUpdateSchema,
     RegisterUserSchema,
@@ -9,19 +9,19 @@ from app.schemas.authSchema import (
     ForgotSchema,
     ConfirmPasswordSchema,
 )
-from app.controllers.user_controller import (
+from controller import (
     validate_user_controller,
     update_user_controller,
     fetch_user_controller,
     fetch_not_attended_user_controller,
     send_mail_to_not_attended_controller,
-    remove_user_controller,
+    delete_user_data,
     insert_user_controller,
     forgot_user_controller,
     confirm_password_controller,
 )
-from app.middleware.auth import get_current_user  # your auth dependency
-from app.middleware.schemavalidate import validate_schema  # if you have schema validation middleware
+from utils import get_current_user  # your auth dependency
+# from middleware import validate_schema  # if you have schema validation middleware
 
 user_router = APIRouter(prefix="/user", tags=["User"])
 
@@ -61,5 +61,5 @@ async def confirm_password(payload: ConfirmPasswordSchema):
     return await confirm_password_controller(payload)
 
 @user_router.delete("/delete/{user_id}", dependencies=[Depends(get_current_user)])
-async def delete_user(user_id: str = Path(...)):
-    return await remove_user_controller(user_id)
+async def delete_user_data(user_id: str = Path(...)):
+    return await delete_user_data(user_id)

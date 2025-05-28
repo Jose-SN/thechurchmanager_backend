@@ -1,7 +1,7 @@
 # services/attendance_service.py
 from typing import Optional, List
 from odmantic import AIOEngine
-from db.models import Attendance
+from models import Attendance
 from bson import ObjectId
 
 class AttendanceService:

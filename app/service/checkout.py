@@ -1,4 +1,4 @@
-from .models import Checkout
+from models import Checkout
 
 class CheckoutService:
     def get_checkout(self, checkout_id=None, submitted_by=None, user_id=None):

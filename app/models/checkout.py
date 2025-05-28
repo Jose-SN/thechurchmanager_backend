@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField, ReferenceField, DateTimeField
+from beanie import Document, StringField, ReferenceField, DateTimeField
 from datetime import datetime
 
 class Checkout(Document):

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, Path
-from your_project.controllers.organization_controller import organization_controller
-from your_project.schemas import OrganizationCreate, OrganizationUpdate
-from your_project.dependencies import get_current_user
+from controller import organization_controller
+from schemas import OrganizationCreate, OrganizationUpdate
+from utils import get_current_user
 
 router = APIRouter()
 

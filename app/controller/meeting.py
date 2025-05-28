@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from schemas.meeting import MeetingBase
-from services.meeting_service import MeetingService
+from schemas import MeetingBase
+from service import MeetingService
 
 class MeetingController:
     def __init__(self):

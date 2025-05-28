@@ -1,15 +1,13 @@
 from fastapi import HTTPException, Depends, Query, Path
-from typing import Optional, List
+from typing import Optional
 
-from schemas.status import StatusCreate, StatusUpdate, StatusInDB
-from services.status_service import StatusService
+from schemas.status import StatusCreate, StatusUpdate
+from service import StatusService
+from utils import get_current_user
 
 # Instantiate your service
 service = StatusService()
 
-# Dummy auth dependency — replace with your real auth mechanism
-def get_current_user():
-    return "user_id_example"
 
 async def fetch_status(
     id: Optional[str] = Query(None),

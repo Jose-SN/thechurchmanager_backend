@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
-from controllers.mail_template_controller import (
+from controller import (
     fetch_mail_templates,
     insert_mail_template,
     update_mail_template,
     remove_mail_template
 )
-from middleware.auth import get_current_user
-from middleware.schema_validate import validate_mail_template
+from utils import get_current_user
+from utils import validate_mail_template
 
 mail_template_router = APIRouter(prefix="/mailTemplate")
 

@@ -1,8 +1,8 @@
 from typing import Optional, List, Union
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
-from your_project.db.models import MeetingModel  # Your Motor/Mongo model wrapper
-from your_project.schemas import MeetingCreate, MeetingUpdate, MeetingInDB
+from models import MeetingModel  # Your Motor/Mongo model wrapper
+from schemas import MeetingCreate, MeetingUpdate, MeetingInDB
 
 class MeetingService:
     def __init__(self, db_client: AsyncIOMotorClient):

@@ -1,9 +1,9 @@
 from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from bson import ObjectId
-from app.services import user_service, otp_service, email_service
-from app.utility import generate_otp
-from app.schemas.user_schema import IUser, IValidatedUser
+from service import user_service, otp_service, email_service
+from utils import generate_otp
+from schemas import IUser, IValidatedUser
 from typing import Any, Dict
 
 

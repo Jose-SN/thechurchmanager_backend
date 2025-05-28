@@ -1,5 +1,5 @@
 from fastapi import UploadFile, HTTPException
-from services.file_service import FileService
+from service import FileService
 
 service = FileService()
 

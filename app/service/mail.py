@@ -1,5 +1,5 @@
 from typing import List, Optional
-from models.mail_template import MailTemplate, MailTemplateCreate
+from models import MailTemplate, MailTemplateCreate
 from pymongo.collection import Collection
 from bson import ObjectId
 from fastapi import HTTPException

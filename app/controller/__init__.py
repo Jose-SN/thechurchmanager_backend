@@ -1,15 +1,15 @@
-from controller.user_controller import UserController
-from controller.file_controller import FileController
-from controller.status_controller import StatusController
-from controller.event_controller import EventController
-from controller.mail_template_controller import MailTemplateController
-from controller.checkout_controller import CheckoutController
-from controller.meeting_controller import MeetingController
-from controller.attendance_controller import AttendanceController
-from controller.webhook_controller import WebhookController
-from controller.dashboard_controller import DashboardController
-from controller.organization_controller import OrganizationController
-from controller.guest_controller import GuestController
+from user import UserController
+from file import FileController
+from status import StatusController
+from event import EventController
+from mail import MailTemplateController
+from checkout import CheckoutController
+from meeting import MeetingController
+from attendance import AttendanceController
+# from webhook import WebhookController
+from dashboard import DashboardController
+from organization import OrganizationController
+from guest import GuestController
 
 user_controller = UserController()
 file_controller = FileController()
@@ -19,7 +19,7 @@ mail_template_controller = MailTemplateController()
 checkout_controller = CheckoutController()
 meeting_controller = MeetingController()
 attendance_controller = AttendanceController()
-webhook_controller = WebhookController()
+# webhook_controller = WebhookController()
 dashboard_controller = DashboardController()
 organization_controller = OrganizationController()
 guest_controller = GuestController()

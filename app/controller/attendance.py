@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from .service import AttendanceService
-from .schemas import AttendanceSchema
+from service import AttendanceService
+from schemas import AttendanceSchema
 
 service = AttendanceService()
 

@@ -1,5 +1,5 @@
-from .models import EventModel, CheckoutModel
-from .schemas import EventSchema
+from models import EventModel, CheckoutModel
+from schemas import EventSchema
 from bson import ObjectId
 from datetime import datetime
 

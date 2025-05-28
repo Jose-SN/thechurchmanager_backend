@@ -14,3 +14,8 @@ websockets
 slowapi  # for rate limiting
 email-validator
 aiosmtplib  # or yagmail if preferred for email sending
+odmantic
+beanie
+motor.motor_asyncio
+mongoengine
+jwt

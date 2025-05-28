@@ -5,9 +5,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
 
-from app.dbhandler import connect_db
+from dbhandler import connect_db
 from routers import router  # Assuming routers/__init__.py
-from app.websocket import websocket_endpoint
+from websocket import websocket_endpoint
 
 app = FastAPI()
 

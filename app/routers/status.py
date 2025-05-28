@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
-from controllers.status_controller import (
+from controller import (
     fetch_status,
     fetch_status_overview,
     insert_status,
     update_status,
     remove_status,
 )
-from dependencies import get_current_user, validate_schema  # your auth & validation dependencies
+from utils import get_current_user, validate_schema  # your auth & validation dependencies
 
 status_router = APIRouter(prefix="/status", tags=["Status"])
 

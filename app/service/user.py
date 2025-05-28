@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from models.user import UserModel  # Assuming UserModel is a Beanie document or similar ORM model
 from pydantic import BaseModel, EmailStr
+from core.config import JWT_SECRET
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-JWT_SECRET = "your_jwt_secret_here"
 JWT_EXPIRY_SECONDS = 3600  # example: 1 hour
 
 class IUser(BaseModel):

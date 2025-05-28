@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from typing import List, Optional
-from guest_service import GuestService
-from guest_schemas import GuestCreate, GuestUpdate, GuestDB
+from service import GuestService
+from schemas import GuestCreate, GuestUpdate, GuestDB
 
 guest_service = GuestService()
 

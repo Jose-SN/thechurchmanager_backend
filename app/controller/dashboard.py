@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from .service import DashboardService
+from service import DashboardService
 
 service = DashboardService()
 

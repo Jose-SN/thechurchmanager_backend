@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Path
 from typing import Optional
 from pydantic import BaseModel
-from your_project.auth import get_current_user  # your auth dependency
-from your_project.schemas import MeetingCreate, MeetingUpdate  # your pydantic schemas
-from your_project.controllers.meeting_controller import (
+from utils import get_current_user  # your auth dependency
+from schemas import MeetingCreate, MeetingUpdate  # your pydantic schemas
+from controller import (
     fetch_meeting,
     insert_meeting,
     update_meeting,

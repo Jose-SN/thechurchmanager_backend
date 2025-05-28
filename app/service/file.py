@@ -43,12 +43,12 @@ class FileService:
 
     def upload_to_s3(self, file_bytes, file_name, content_type):
         bucket = "YOUR_BUCKET_NAME"
-        key = f"betrack-uploads/{file_name}"
+        key = f"thechurchmanager-uploads/{file_name}"
         s3.put_object(Bucket=bucket, Key=key, Body=file_bytes, ContentType=content_type)
         return f"https://{bucket}.s3.amazonaws.com/{key}"
 
     def delete_from_s3(self, file_name):
         bucket = "YOUR_BUCKET_NAME"
-        key = f"betrack-uploads/{file_name}"
+        key = f"thechurchmanager-uploads/{file_name}"
         s3.delete_object(Bucket=bucket, Key=key)
         return True
