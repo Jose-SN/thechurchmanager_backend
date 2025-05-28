@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+passlib[bcrypt]
+python-jose[cryptography]
+motor
+pymongo
+python-multipart
+apscheduler
+boto3
+httpx
+websockets
+slowapi  # for rate limiting
+email-validator
+aiosmtplib  # or yagmail if preferred for email sending

@@ -1,0 +1,32 @@
+# Python cache and environment
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+venv/
+env/
+.venv/
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# VSCode settings
+.vscode/
+
+# Logs
+*.log
+
+# SQLite database files (if any)
+*.sqlite3
+
+# Node.js dependencies (if you keep any Node stuff)
+node_modules/
+
+# Netlify functions/builds (if relevant)
+.netlify/
+
+# Ignore package-lock.json if you want (Node.js)
+package-lock.json
