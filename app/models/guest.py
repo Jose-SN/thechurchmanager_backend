@@ -5,11 +5,11 @@ from bson import ObjectId
 from pydantic import Field
 
 class Guest(Document):
-    firstName: str
-    lastName: str
+    first_name: str
+    last_name: str
     email: Optional[str]
     details: str
-    phone: str
+    phone_number: str
     referrer: Optional[str]
     referralSource: Optional[str]
     prayerRequests: Optional[str]

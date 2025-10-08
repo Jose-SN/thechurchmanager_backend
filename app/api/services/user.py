@@ -39,8 +39,8 @@ class UserService:
 #     email: EmailStr
 #     first_name: str
 #     last_name: Optional[str]
-#     role: Optional[str]
-#     phone: Optional[str]
+#     roles: Optional[str]
+#     phone_number: Optional[str]
 #     primary_user: Optional[bool]
 #     associated_users: Optional[List[str]]
 #     profile_image: Optional[str]
@@ -61,10 +61,10 @@ class UserService:
     #     return {
     #         "id": str(login_user["_id"]),
     #         "email": login_user["email"],
-    #         "first_name": login_user.get("first_name") or login_user.get("firstName"),
-    #         "last_name": login_user.get("last_name") or login_user.get("lastName"),
-    #         "role": login_user.get("role"),
-    #         "phone": login_user.get("phone", ""),
+    #         "first_name": login_user.get("first_name") or login_user.get("first_name"),
+    #         "last_name": login_user.get("last_name") or login_user.get("last_name"),
+    #         "roles": login_user.get("roles"),
+    #         "phone_number": login_user.get("phone_number", ""),
     #         "primary_user": login_user.get("primary_user") or login_user.get("primaryUser"),
     #         "associated_users": [str(u) for u in login_user.get("associated_users", [])] if login_user.get("associated_users") else [],
     #         "profile_image": login_user.get("profile_image") or login_user.get("profileImage"),

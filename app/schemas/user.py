@@ -29,8 +29,8 @@ class IUserSchema(BaseModel):
     associated_users: Optional[List[PyObjectId]]
     email: EmailStr
     password: Optional[str]
-    phone: Optional[str]
-    role: Optional[str]
+    phone_number: Optional[str]
+    roles: Optional[str]
     approved: Optional[str]
     relationship: Optional[str]
     date_of_birth: Optional[date]
@@ -53,8 +53,8 @@ class IUser(BaseModel):
     associated_users: Optional[List[PyObjectId]]
     email: EmailStr
     password: Optional[str]
-    phone: Optional[str]
-    role: Optional[str]
+    phone_number: Optional[str]
+    roles: Optional[str]
     approved: Optional[str]
     relationship: Optional[str]
     date_of_birth: Optional[date]
@@ -75,8 +75,8 @@ class IValidatedUser(BaseModel):
     primary_user: Optional[bool]
     associated_users: Optional[List[PyObjectId]]
     email: EmailStr
-    phone: str
-    role: Optional[str]
+    phone_number: str
+    roles: Optional[str]
     approved: Optional[str]
     relationship: Optional[str]
     date_of_birth: Optional[date]

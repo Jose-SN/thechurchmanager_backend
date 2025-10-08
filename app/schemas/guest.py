@@ -20,11 +20,11 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 class GuestBase(BaseModel):
-    firstName: str
-    lastName: str
+    first_name: str
+    last_name: str
     email: Optional[EmailStr] = None
     details: str
-    phone: str
+    phone_number: str
     referrer: Optional[str] = None
     referralSource: Optional[str] = None
     prayerRequests: Optional[str] = None
