@@ -1,5 +1,13 @@
+from datetime import datetime, timedelta
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
+from uvicorn import Config
+from fastapi import HTTPException
+from bson import ObjectId
+
+from app.api import dependencies
+from app.core.config import Settings
+from app.schemas.user import IValidatedUser
 
 class UserService:
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -11,6 +19,98 @@ class UserService:
         for user in users:
             if "_id" in user:
                 user["_id"] = str(user["_id"])
+        return users
+
+    async def validate_user_data(self, email: str, password: str) -> IValidatedUser:
+        user = await self.users.find_one({"email": email})
+        if not user:
+            raise ValueError("No matching records found")
+        # hashed_password = user.get("password")
+        # if not hashed_password or not pwd_context.verify(password, hashed_password):
+        #     raise ValueError("Invalid credentials")
+        return await self.generate_authorized_user(user)
+
+    async def generate_authorized_user(self, login_user: dict) -> IValidatedUser:
+        payload = self.get_jwt_payload(login_user)
+        expiry_seconds = dependencies.parse_expiry_to_seconds(Settings.JWT_EXPIRY)
+        payload["exp"] = datetime.utcnow() + timedelta(seconds=expiry_seconds)
+        token = 'thechurchmanager'  # jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        payload["jwt"] = token
+        return IValidatedUser(**payload)
+
+    def get_jwt_payload(self, login_user: dict) -> dict:
+        # Compose nested social and contact objects
+        social = {
+            "facebook": login_user.get("facebook"),
+            "instagram": login_user.get("instagram"),
+            "youtube": login_user.get("youtube"),
+        }
+        contact = {
+            "email": login_user.get("email"),
+            "phone": login_user.get("phone_number") or login_user.get("phone"),
+            "website": login_user.get("website"),
+            "address": login_user.get("address"),
+        }
+        return {
+            "first_name": login_user.get("first_name"),
+            "last_name": login_user.get("last_name"),
+            "organization_id": str(login_user.get("organization_id")),
+            "roles": login_user.get("roles", []),
+            "profile_image": login_user.get("profile_image"),
+            "creation_date": login_user.get("creation_date"),
+            "modification_date": login_user.get("modification_date"),
+            "password": login_user.get("password"),
+            "date_of_birth": login_user.get("date_of_birth"),
+            "about": login_user.get("about", ""),
+            "is_imported": login_user.get("is_imported", False),
+            "is_password_hashed": login_user.get("is_password_hashed", False),
+            "teams": login_user.get("teams", []),
+            "social": social,
+            "contact": contact,
+        }
+
+
+    async def save_user_data(self, user_data: dict) -> dict:
+        # Hash password before save
+        # if "password" in user_data and user_data["password"]:
+        #     user_data["password"] = pwd_context.hash(user_data["password"])
+
+        result = await self.users.insert_one(user_data)
+        user = await self.users.find_one({"_id": result.inserted_id})
+        return user if user is not None else {}
+    
+    
+    async def update_user_data(self, user_data: dict) -> dict:
+        user_id = user_data.get("id")
+        # if not user_id or not ObjectId.is_valid(user_id):
+        #     raise ValueError("Invalid user ID")
+
+        # if "password" in user_data and user_data["password"]:
+        #     user_data["password"] = pwd_context.hash(user_data["password"])
+
+        update_result = await self.users.find_one_and_update(
+            {"_id": str(user_id)},
+            {"$set": user_data},
+            return_document=True  # Returns updated document
+        )
+
+        if not update_result:
+            raise ValueError("User not found")
+        return update_result
+
+    async def delete_user_data(self, user_id: str) -> str:
+        if not ObjectId.is_valid(user_id):
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+        result = await self.users.find_one_and_delete({"_id": str(user_id)})
+        return "" if result else "User not found"
+
+    async def save_bulk_user_data(self, users_data: list[dict]) -> list[dict]:
+        """
+        Bulk insert users and return the inserted user documents.
+        """
+        result = await self.users.insert_many(users_data)
+        inserted_ids = result.inserted_ids
+        users = await self.users.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
         return users
 
 

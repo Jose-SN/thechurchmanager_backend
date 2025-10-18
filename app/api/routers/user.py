@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from app.api.controllers.user import UserController
 from app.api.services.user import UserService
 from app.api.dependencies import get_db
@@ -15,8 +15,21 @@ def get_user_controller(user_service=Depends(get_user_service)):
 async def get_all_users(user_controller: UserController = Depends(get_user_controller)):
     return await user_controller.fetch_user_controller()
 
+@user_router.post("/save")
+async def save_user(request: Request, user_controller: UserController = Depends(get_user_controller)):
+    return await user_controller.save_user_controller(request)
 
+@user_router.post("/bulk-save")
+async def save_bulk_user(request: Request, user_controller: UserController = Depends(get_user_controller)):
+    return await user_controller.save_bulk_user_controller(request)
 
+@user_router.put("/update")
+async def update_user(request: Request, user_controller: UserController = Depends(get_user_controller)):
+    return await user_controller.update_user_controller(request)
+
+@user_router.post("/delete/{user_id}")
+async def delete_user(user_id: str, user_controller: UserController = Depends(get_user_controller)):
+    return await user_controller.delete_user_controller(user_id)
 
 # from fastapi import APIRouter, Depends, Path, Request
 # from app.controller.user import UserController

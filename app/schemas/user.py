@@ -8,16 +8,18 @@ class PyObjectId(ObjectId):
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
-    
+
     @classmethod
     def validate(cls, v):
         if not ObjectId.is_valid(v):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
-    
+
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        schema = handler(core_schema)
+        schema.update(type="string")
+        return schema
 
 # Base user schema with MongoDB _id
 class IUserSchema(BaseModel):
@@ -39,7 +41,6 @@ class IUserSchema(BaseModel):
     modification_date: datetime
 
     class Config:
-        allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -67,20 +68,34 @@ class IUser(BaseModel):
         json_encoders = {ObjectId: str}
 
 # Equivalent to IValidatedUser (excludes password, includes jwt token)
+
+class SocialLinks(BaseModel):
+    facebook: Optional[str]
+    instagram: Optional[str]
+    youtube: Optional[str]
+
+class ContactInfo(BaseModel):
+    email: Optional[EmailStr]
+    phone: Optional[str]
+    website: Optional[str]
+    address: Optional[str]
+
 class IValidatedUser(BaseModel):
-    id: PyObjectId
     first_name: str
     last_name: Optional[str]
-    profile_image: Optional[str]
-    primary_user: Optional[bool]
-    associated_users: Optional[List[PyObjectId]]
-    email: EmailStr
-    phone_number: str
-    roles: Optional[str]
-    approved: Optional[str]
-    relationship: Optional[str]
-    date_of_birth: Optional[date]
     organization_id: Optional[str]
+    roles: Optional[List[str]]
+    profile_image: Optional[str]
+    creation_date: Optional[datetime]
+    modification_date: Optional[datetime]
+    password: Optional[str]
+    date_of_birth: Optional[date]
+    about: Optional[str]
+    is_imported: Optional[bool]
+    is_password_hashed: Optional[bool]
+    teams: Optional[List[str]]
+    social: Optional[SocialLinks]
+    contact: Optional[ContactInfo]
     jwt: Optional[str]
 
     class Config:
@@ -90,4 +105,5 @@ class IValidatedUser(BaseModel):
 # Forgot password request schema
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+    password: str
     password: str
