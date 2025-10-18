@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from .root import router as root_router
+from .root import root_router
 from fastapi import APIRouter
 from .user import user_router
 from .health import router as health_router  # rename the file if needed
@@ -11,17 +11,6 @@ router = APIRouter()
 router.include_router(health_router, prefix="/health-check")
 router.include_router(user_router, prefix="/user")
 router.include_router(root_router)
-
-
-@router.get("/", response_class=HTMLResponse)
-async def root():
-    app_name = "The Church Manager"
-    return f"<h4 style='display: flex; justify-content: center; letter-spacing: 0.4em;'>{app_name.upper()}</h4>"
-
-@router.get("/{full_path:path}")
-async def catch_all(full_path: str):
-    return RedirectResponse(url="/")
-
 
 
 # from fastapi import APIRouter, Request

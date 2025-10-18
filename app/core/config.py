@@ -15,14 +15,16 @@ class Settings(BaseSettings):
     GMAIL_USERNAME: str = Field(default='', validation_alias='GMAIL_USERNAME')
     GMAIL_PASS: str = Field(default='', validation_alias='GMAIL_PASS')
 
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
+
     @field_validator('PORT', 'MONGO_URI')
     @classmethod
     def check_required(cls, v, info):
         if not v:
             raise ValueError(f"Environment variable {info.field_name} is missing")
         return v
-    class Config:
-        env_file = ".env"
-        extra = "ignore"  # <<< Add this line
 
 settings = Settings()
