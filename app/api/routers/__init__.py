@@ -5,6 +5,9 @@ from .root import root_router
 from fastapi import APIRouter
 from .user import user_router
 from .team import team_router
+from .role import role_router
+from .module import module_router
+from .organization import organization_router
 from .health import router as health_router  # rename the file if needed
 
 router = APIRouter()
@@ -12,6 +15,9 @@ router = APIRouter()
 router.include_router(health_router, prefix="/health-check")
 router.include_router(user_router, prefix="/user")
 router.include_router(team_router, prefix="/team")
+router.include_router(module_router, prefix="/module")
+router.include_router(role_router, prefix="/role")
+router.include_router(organization_router, prefix="/organization")
 router.include_router(root_router)
 
 

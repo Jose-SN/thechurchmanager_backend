@@ -1,7 +1,10 @@
 from .user import UserController
 from .team import TeamController
+from .role import RoleController
+from .module import ModuleController
+from .organization import OrganizationController
 
-__all__ = ["UserController", "TeamController"]
+__all__ = ["UserController", "TeamController", "RoleController", "ModuleController", "OrganizationController"]
 
 
 # from motor.motor_asyncio import AsyncIOMotorClient

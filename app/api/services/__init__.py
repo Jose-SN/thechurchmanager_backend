@@ -1,7 +1,10 @@
 from .user import UserService
 from .team import TeamService
+from .role import RoleService
+from .module import ModuleService
+from .organization import OrganizationService
 
-__all__ = ["UserService", "TeamService"]
+__all__ = ["UserService", "TeamService", "RoleService", "ModuleService", "OrganizationService"]
 
 
 # from otp import OtpService
