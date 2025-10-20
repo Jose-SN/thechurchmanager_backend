@@ -7,9 +7,9 @@ class OrganizationController:
     def __init__(self, organization_service: OrganizationService):
         self.organization_service = organization_service
 
-    async def fetch_organization_controller(self):
+    async def fetch_organization_controller(self, filters: dict = {}):
         try:
-            organizations = await self.organization_service.get_organization_data()
+            organizations = await self.organization_service.get_organization_data(filters)
             data = jsonable_encoder(organizations)
             return JSONResponse(status_code=200, content={
                 "success": True,

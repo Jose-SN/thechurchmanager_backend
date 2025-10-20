@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from app.api.controllers import UserController, OrganizationController
 from app.api.services import UserService, OrganizationService
 from app.api.dependencies import get_db
@@ -12,8 +12,16 @@ def get_organization_controller(organization_service=Depends(get_organization_se
     return OrganizationController(organization_service)
 
 @organization_router.get("/get")
-async def get_all_organizations(organization_controller: OrganizationController = Depends(get_organization_controller)):
-    return await organization_controller.fetch_organization_controller()
+async def get_all_organizations(
+    organization_controller: OrganizationController = Depends(get_organization_controller),
+    _id: str = Query(None),
+    organization_id: str = Query(None)):
+    filters = {}
+    if _id:
+        filters["_id"] = _id
+    if organization_id:
+        filters["organization_id"] = organization_id
+    return await organization_controller.fetch_organization_controller(filters)
 
 @organization_router.post("/save")
 async def save_organization(request: Request, organization_controller: OrganizationController = Depends(get_organization_controller)):

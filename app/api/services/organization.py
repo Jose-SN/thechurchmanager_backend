@@ -13,11 +13,20 @@ class OrganizationService:
         self.db = db
         self.organizations = db["organizations"]
 
-    async def get_organization_data(self) -> List[dict]:
-        organizations = await self.organizations.find({}).to_list(length=None)
-        for organization in organizations:
-            if "_id" in organization:
-                organization["_id"] = str(organization["_id"])
+    async def get_organization_data(self, filters: dict = {}) -> List[dict]:
+        query = {}
+        if filters:
+            query = filters.copy()
+            if "_id" in query:
+                try:
+                    query["_id"] = ObjectId(query["_id"])
+                except Exception:
+                    # Invalid ObjectId, will return empty result
+                    return []
+        organizations = await self.organizations.find(query).to_list(length=None)
+        for org in organizations:
+            if "_id" in org:
+                org["_id"] = str(org["_id"])
         return organizations
 
     async def save_organization_data(self, organization_data: dict) -> dict:
