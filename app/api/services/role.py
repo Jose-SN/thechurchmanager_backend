@@ -13,8 +13,17 @@ class RoleService:
         self.db = db
         self.roles = db["roles"]
 
-    async def get_role_data(self) -> List[dict]:
-        roles = await self.roles.find({}).to_list(length=None)
+    async def get_role_data(self, filters: dict = {}) -> List[dict]:
+        query = {}
+        if filters:
+            query = filters.copy()
+            if "_id" in query:
+                try:
+                    query["_id"] = ObjectId(query["_id"])
+                except Exception:
+                    # Invalid ObjectId, will return empty result
+                    return []
+        roles = await self.roles.find(query).to_list(length=None)
         for role in roles:
             if "_id" in role:
                 role["_id"] = str(role["_id"])

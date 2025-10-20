@@ -7,9 +7,9 @@ class RoleController:
     def __init__(self, role_service: RoleService):
         self.role_service = role_service
 
-    async def fetch_role_controller(self):
+    async def fetch_role_controller(self, filters: dict = {}):
         try:
-            roles = await self.role_service.get_role_data()
+            roles = await self.role_service.get_role_data(filters)
             data = jsonable_encoder(roles)
             return JSONResponse(status_code=200, content={
                 "success": True,
