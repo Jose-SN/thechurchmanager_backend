@@ -1,6 +1,7 @@
 from .user import UserController
+from .team import TeamController
 
-__all__ = ["UserController"]
+__all__ = ["UserController", "TeamController"]
 
 
 # from motor.motor_asyncio import AsyncIOMotorClient

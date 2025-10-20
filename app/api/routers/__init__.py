@@ -4,12 +4,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from .root import root_router
 from fastapi import APIRouter
 from .user import user_router
+from .team import team_router
 from .health import router as health_router  # rename the file if needed
 
 router = APIRouter()
 
 router.include_router(health_router, prefix="/health-check")
 router.include_router(user_router, prefix="/user")
+router.include_router(team_router, prefix="/team")
 router.include_router(root_router)
 
 
