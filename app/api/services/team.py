@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from warnings import filters
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
 from uvicorn import Config
@@ -13,8 +14,17 @@ class TeamService:
         self.db = db
         self.teams = db["teams"]
 
-    async def get_team_data(self) -> List[dict]:
-        teams = await self.teams.find({}).to_list(length=None)
+    async def get_team_data(self, filters: dict = {}) -> List[dict]:
+        query = {}
+        if filters:
+            query = filters.copy()
+            if "_id" in query:
+                try:
+                    query["_id"] = ObjectId(query["_id"])
+                except Exception:
+                    # Invalid ObjectId, will return empty result
+                    return []
+        teams = await self.teams.find(query).to_list(length=None)
         for team in teams:
             if "_id" in team:
                 team["_id"] = str(team["_id"])

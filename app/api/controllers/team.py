@@ -7,9 +7,9 @@ class TeamController:
     def __init__(self, team_service: TeamService):
         self.team_service = team_service
 
-    async def fetch_team_controller(self):
+    async def fetch_team_controller(self, filters: dict = {}):
         try:
-            teams = await self.team_service.get_team_data()
+            teams = await self.team_service.get_team_data(filters)
             data = jsonable_encoder(teams)
             return JSONResponse(status_code=200, content={
                 "success": True,
