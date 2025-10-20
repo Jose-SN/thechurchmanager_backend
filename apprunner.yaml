@@ -1,0 +1,10 @@
+version: 1.0
+runtime: python
+build:
+  commands:
+    - python -m pip install -r requirements.txt
+run:
+  commands:
+    - gunicorn app:app --bind 0.0.0.0:$PORT
+  port: 8080
+  health_check_path: /health
