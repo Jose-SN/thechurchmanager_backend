@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from app.api.controllers.user import UserController
 from app.api.services.user import UserService
 from app.api.dependencies import get_db
@@ -12,8 +12,17 @@ def get_user_controller(user_service=Depends(get_user_service)):
     return UserController(user_service)
 
 @user_router.get("/get")
-async def get_all_users(user_controller: UserController = Depends(get_user_controller)):
-    return await user_controller.fetch_user_controller()
+async def get_all_users(
+    user_controller: UserController = Depends(get_user_controller),
+    _id: str = Query(None),
+    organization_id: str = Query(None)
+):
+    filters = {}
+    if _id:
+        filters["_id"] = _id
+    if organization_id:
+        filters["organization_id"] = organization_id
+    return await user_controller.fetch_user_controller(filters)
 
 @user_router.post("/save")
 async def save_user(request: Request, user_controller: UserController = Depends(get_user_controller)):

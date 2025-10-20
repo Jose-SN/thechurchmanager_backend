@@ -7,9 +7,9 @@ class UserController:
     def __init__(self, user_service: UserService):
         self.user_service = user_service
 
-    async def fetch_user_controller(self):
+    async def fetch_user_controller(self, filters: dict = {}):
         try:
-            users = await self.user_service.get_user_data()
+            users = await self.user_service.get_user_data(filters)
             data = jsonable_encoder(users)
             return JSONResponse(status_code=200, content={
                 "success": True,

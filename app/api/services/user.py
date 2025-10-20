@@ -14,8 +14,17 @@ class UserService:
         self.db = db
         self.users = db["users"]
 
-    async def get_user_data(self) -> List[dict]:
-        users = await self.users.find({}).to_list(length=None)
+    async def get_user_data(self, filters: dict = {}) -> List[dict]:
+        query = {}
+        if filters:
+            query = filters.copy()
+            if "_id" in query:
+                try:
+                    query["_id"] = ObjectId(query["_id"])
+                except Exception:
+                    # Invalid ObjectId, will return empty result
+                    return []
+        users = await self.users.find(query).to_list(length=None)
         for user in users:
             if "_id" in user:
                 user["_id"] = str(user["_id"])
