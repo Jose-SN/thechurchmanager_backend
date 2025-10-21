@@ -49,11 +49,11 @@ class UserController:
     async def save_user_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.user_service.save_user_data(body)
+            result = await self.user_service.save_user_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": result
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
