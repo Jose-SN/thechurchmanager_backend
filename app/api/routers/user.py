@@ -28,6 +28,11 @@ async def get_all_users(
 async def save_user(request: Request, user_controller: UserController = Depends(get_user_controller)):
     return await user_controller.save_user_controller(request)
 
+@user_router.post("/login")
+async def login_user(request: Request, user_controller: UserController = Depends(get_user_controller)):
+    return await user_controller.login_user_controller(request)
+
+
 @user_router.post("/bulk-save")
 async def save_bulk_user(request: Request, user_controller: UserController = Depends(get_user_controller)):
     return await user_controller.save_bulk_user_controller(request)

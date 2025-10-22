@@ -52,6 +52,21 @@ class OrganizationController:
                 "message": "Save failed",
                 "error": str(err)
             })
+    async def login_organization_controller(self, request: Request):
+        body = await request.json()
+        try:
+            result = await self.organization_service.login_organization_data(body.email, body.password)
+            return JSONResponse(status_code=200, content={
+                "success": True,
+                "message": "Login successful",
+                "data": result
+            })
+        except Exception as err:
+            return JSONResponse(status_code=400, content={
+                "success": False,
+                "message": "Save failed",
+                "error": str(err)
+            })
 
 
     async def update_organization_controller(self, request: Request):

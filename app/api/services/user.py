@@ -30,7 +30,7 @@ class UserService:
                 user["_id"] = str(user["_id"])
         return users
 
-    async def validate_user_data(self, email: str, password: str) -> IValidatedUser:
+    async def login_user_data(self, email: str, password: str) -> IValidatedUser:
         user = await self.users.find_one({"email": email})
         if not user:
             raise ValueError("No matching records found")
@@ -49,35 +49,35 @@ class UserService:
 
     def get_jwt_payload(self, login_user: dict) -> dict:
         # Compose nested social and contact objects
-        social = {
+        social = login_user.get("social", {
             "facebook": login_user.get("facebook"),
             "instagram": login_user.get("instagram"),
             "youtube": login_user.get("youtube"),
-        }
-        contact = {
+        })
+        contact = login_user.get("contact", {
             "email": login_user.get("email"),
             "phone": login_user.get("phone_number") or login_user.get("phone"),
             "website": login_user.get("website"),
             "address": login_user.get("address"),
-        }
+        })
         return {
+            "_id": str(login_user.get("_id")),
             "first_name": login_user.get("first_name"),
             "last_name": login_user.get("last_name"),
             "organization_id": str(login_user.get("organization_id")),
+            "is_imported": login_user.get("is_imported", False),
+            "is_password_hashed": login_user.get("is_password_hashed", False),
             "roles": login_user.get("roles", []),
-            "profile_image": login_user.get("profile_image"),
+            "profile_image": login_user.get("profile_image", ""),
             "creation_date": login_user.get("creation_date"),
             "modification_date": login_user.get("modification_date"),
             "password": login_user.get("password"),
             "date_of_birth": login_user.get("date_of_birth"),
             "about": login_user.get("about", ""),
-            "is_imported": login_user.get("is_imported", False),
-            "is_password_hashed": login_user.get("is_password_hashed", False),
             "teams": login_user.get("teams", []),
             "social": social,
             "contact": contact,
         }
-
 
     async def save_user_data(self, user_data: dict) -> dict:
         # Hash password before save

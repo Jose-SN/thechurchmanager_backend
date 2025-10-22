@@ -49,6 +49,54 @@ class OrganizationService:
         return organizations
 
 
+    async def login_organization_data(self, email: str, password: str):
+        organization = await self.organizations.find_one({"email": email})
+        if not organization:
+            raise ValueError("No matching records found")
+        # hashed_password = organization.get("password")
+        # if not hashed_password or not pwd_context.verify(password, hashed_password):
+        #     raise ValueError("Invalid credentials")
+        return await self.generate_authorized_organization(organization)
+
+    async def generate_authorized_organization(self, login_organization: dict):
+        payload = self.get_jwt_payload(login_organization)
+        expiry_seconds = dependencies.parse_expiry_to_seconds(Settings.JWT_EXPIRY)
+        payload["exp"] = datetime.utcnow() + timedelta(seconds=expiry_seconds)
+        token = 'thechurchmanager'  # jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        payload["jwt"] = token
+        return payload
+
+    def get_jwt_payload(self, login_organization: dict) -> dict:
+        # Compose nested social and contact objects
+        social = {
+            "facebook": login_organization.get("social", {}).get("facebook") or login_organization.get("facebook"),
+            "instagram": login_organization.get("social", {}).get("instagram") or login_organization.get("instagram"),
+            "youtube": login_organization.get("social", {}).get("youtube") or login_organization.get("youtube"),
+            "twitter": login_organization.get("social", {}).get("twitter") or login_organization.get("twitter"),
+        }
+        contact = {
+            "phone": login_organization.get("contact", {}).get("phone") or login_organization.get("phone_number") or login_organization.get("phone"),
+            "email": login_organization.get("contact", {}).get("email") or login_organization.get("email"),
+            "website": login_organization.get("contact", {}).get("website") or login_organization.get("website"),
+            "address": login_organization.get("contact", {}).get("address") or login_organization.get("address"),
+            "officeHours": login_organization.get("contact", {}).get("officeHours"),
+        }
+        return {
+            "_id": str(login_organization.get("_id")),
+            "name": login_organization.get("name"),
+            "title": login_organization.get("title"),
+            "members": login_organization.get("members"),
+            "volunteers": login_organization.get("volunteers"),
+            "about": login_organization.get("about", ""),
+            "contact": contact,
+            "leadership": login_organization.get("leadership", []),
+            "social": social,
+            "profile_image": login_organization.get("profile_image"),
+            "password": login_organization.get("password"),
+        }
+
+
+
     async def update_organization_data(self, organization_data: dict) -> dict:
         organization_id = organization_data.get("id")
         # if not organization_id or not ObjectId.is_valid(organization_id):

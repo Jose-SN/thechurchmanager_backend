@@ -33,7 +33,7 @@ class UserController:
                     "message": "Validation failed",
                     "error": "Email and password are required"
                 })
-            data = await self.user_service.validate_user_data(email, password)
+            data = await self.user_service.login_user_data(email, password)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Validation successful",
@@ -77,6 +77,21 @@ class UserController:
                 "error": str(err)
             })
 
+    async def login_user_controller(self, request: Request):
+        body = await request.json()
+        try:
+            result = await self.user_service.login_user_data(body.email, body.password)
+            return JSONResponse(status_code=200, content={
+                "success": True,
+                "message": "Login successful",
+                "data": result
+            })
+        except Exception as err:
+            return JSONResponse(status_code=400, content={
+                "success": False,
+                "message": "Save failed",
+                "error": str(err)
+            })
 
     async def update_user_controller(self, request: Request):
         body = await request.json()
