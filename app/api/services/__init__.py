@@ -3,8 +3,18 @@ from .team import TeamService
 from .role import RoleService
 from .module import ModuleService
 from .organization import OrganizationService
+from .teacher import TeacherService
+from .inventory import InventoryService
 
-__all__ = ["UserService", "TeamService", "RoleService", "ModuleService", "OrganizationService"]
+__all__ = [
+    "UserService", 
+    "TeamService", 
+    "RoleService", 
+    "ModuleService", 
+    "OrganizationService",
+    "TeacherService",
+    "InventoryService"
+    ]
 
 
 # from otp import OtpService

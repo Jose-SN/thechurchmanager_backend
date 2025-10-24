@@ -3,8 +3,18 @@ from .team import TeamController
 from .role import RoleController
 from .module import ModuleController
 from .organization import OrganizationController
+from .teacher import TeacherController
+from .inventory import InventoryController
 
-__all__ = ["UserController", "TeamController", "RoleController", "ModuleController", "OrganizationController"]
+__all__ = [
+    "UserController", 
+    "TeamController", 
+    "RoleController", 
+    "ModuleController", 
+    "OrganizationController",
+    "TeacherController",
+    "InventoryController"
+    ]
 
 
 # from motor.motor_asyncio import AsyncIOMotorClient

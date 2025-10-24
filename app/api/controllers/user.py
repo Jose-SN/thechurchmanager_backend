@@ -99,6 +99,7 @@ class UserController:
             await self.user_service.update_user_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
+                "data": body,
                 "message": "Successfully updated"
             })
         except Exception as err:
