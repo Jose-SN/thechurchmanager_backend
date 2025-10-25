@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from unittest import result
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
 from uvicorn import Config
@@ -6,7 +7,7 @@ from fastapi import HTTPException
 from bson import ObjectId
 
 from app.api import dependencies
-from app.core.config import Settings
+from app.core.config import settings
 
 class OrganizationService:
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -29,14 +30,18 @@ class OrganizationService:
                 org["_id"] = str(org["_id"])
         return organizations
 
-    async def save_organization_data(self, organization_data: dict) -> dict:
+    async def save_organization_data(self, organization_data: dict):
         # Hash password before save
         # if "password" in organization_data and organization_data["password"]:
         #     organization_data["password"] = pwd_context.hash(organization_data["password"])
 
-        result = await self.organizations.insert_one(organization_data)
-        organization = await self.organizations.find_one({"_id": result.inserted_id})
-        return organization if organization is not None else {}
+            result = await self.organizations.insert_one(organization_data)
+            organization = await self.organizations.find_one({"_id": result.inserted_id})
+            if organization:
+                organization = dependencies.convert_objectid(organization)
+            else:
+                organization = {}
+            return organization
     
     
     async def save_bulk_organization_data(self, organizations_data: list[dict]) -> list[dict]:
@@ -50,7 +55,7 @@ class OrganizationService:
 
 
     async def login_organization_data(self, email: str, password: str):
-        organization = await self.organizations.find_one({"email": email})
+        organization = await self.organizations.find_one({"contact.email": email})
         if not organization:
             raise ValueError("No matching records found")
         # hashed_password = organization.get("password")
@@ -60,9 +65,9 @@ class OrganizationService:
 
     async def generate_authorized_organization(self, login_organization: dict):
         payload = self.get_jwt_payload(login_organization)
-        expiry_seconds = dependencies.parse_expiry_to_seconds(Settings.JWT_EXPIRY)
+        expiry_seconds = dependencies.parse_expiry_to_seconds(settings.JWT_EXPIRY)
         payload["exp"] = datetime.utcnow() + timedelta(seconds=expiry_seconds)
-        token = 'thechurchmanager'  # jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        token = 'thechurchmanager'  # jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
         payload["jwt"] = token
         return payload
 

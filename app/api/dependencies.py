@@ -1,3 +1,4 @@
+from bson import ObjectId
 from fastapi import Request
 
 def get_db(request: Request):
@@ -21,3 +22,16 @@ def parse_expiry_to_seconds(expiry: str) -> int:
     else:
         # Assume it's seconds if no suffix
         return int(expiry)
+
+def convert_objectid(obj):
+    if not isinstance(obj, dict):
+        return {}
+    def _convert(val):
+        if isinstance(val, ObjectId):
+            return str(val)
+        elif isinstance(val, dict):
+            return {k: _convert(v) for k, v in val.items()}
+        elif isinstance(val, list):
+            return [_convert(item) for item in val]
+        return val
+    return _convert(obj)

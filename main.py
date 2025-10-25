@@ -10,7 +10,7 @@ from app.db.mongodb import connect_db
 from app.api.routers import router  # Assuming routers/__init__.py
 from app.api.websocket import websocket_endpoint
 
-app = FastAPI()
+app = FastAPI(title="The Church Manager")
 
 # Security headers middleware
 @app.middleware("http")
@@ -20,10 +20,16 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
     return response
 
-# CORS (if needed)
+# CORS (allow frontend origin)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://thechurchmanager.com", 
+        "https://thechurchmanager.com", 
+        "http://www.thechurchmanager.com", 
+        "https://www.thechurchmanager.com", 
+        "*"],  # Add your frontend origin here
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,8 +39,6 @@ app.add_middleware(
 app.mount("/public", StaticFiles(directory="public"), name="public")
 
 
-
-app = FastAPI(title="The Church Manager")
 
 @app.on_event("startup")
 async def startup_event():
