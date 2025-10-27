@@ -103,7 +103,7 @@ class OrganizationService:
 
 
     async def update_organization_data(self, organization_data: dict) -> dict:
-        organization_id = organization_data.get("id")
+        organization_id = organization_data.get("_id")
         # if not organization_id or not ObjectId.is_valid(organization_id):
         #     raise ValueError("Invalid organization ID")
 
