@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from bson import ObjectId
 
 from app.api import dependencies
-from app.core.config import Settings
+from app.core.config import settings
 from app.schemas.user import IValidatedUser
 
 class UserService:
@@ -41,7 +41,7 @@ class UserService:
 
     async def generate_authorized_user(self, login_user: dict) -> IValidatedUser:
         payload = self.get_jwt_payload(login_user)
-        expiry_seconds = dependencies.parse_expiry_to_seconds(Settings.JWT_EXPIRY)
+        expiry_seconds = dependencies.parse_expiry_to_seconds(settings.JWT_EXPIRY)
         payload["exp"] = datetime.utcnow() + timedelta(seconds=expiry_seconds)
         token = 'thechurchmanager'  # jwt.encode(payload, JWT_SECRET, algorithm="HS256")
         payload["jwt"] = token

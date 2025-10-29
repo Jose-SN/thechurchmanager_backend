@@ -5,6 +5,7 @@ from .module import ModuleService
 from .organization import OrganizationService
 from .teacher import TeacherService
 from .inventory import InventoryService
+from .plan import PlanService
 
 __all__ = [
     "UserService", 
@@ -13,8 +14,9 @@ __all__ = [
     "ModuleService", 
     "OrganizationService",
     "TeacherService",
-    "InventoryService"
-    ]
+    "InventoryService",
+    "PlanService"
+]
 
 
 # from otp import OtpService
