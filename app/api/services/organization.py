@@ -5,6 +5,7 @@ from typing import List
 from uvicorn import Config
 from fastapi import HTTPException
 from bson import ObjectId
+from pymongo import ReturnDocument
 
 from app.api import dependencies
 from app.core.config import settings
@@ -103,22 +104,20 @@ class OrganizationService:
 
 
     async def update_organization_data(self, organization_data: dict) -> dict:
-        organization_id = organization_data.get("_id")
-        # if not organization_id or not ObjectId.is_valid(organization_id):
-        #     raise ValueError("Invalid organization ID")
-
-        # if "password" in organization_data and organization_data["password"]:
-        #     organization_data["password"] = pwd_context.hash(organization_data["password"])
-
-        update_result = await self.organizations.find_one_and_update(
-            {"_id": str(organization_id)},
-            {"$set": organization_data},
-            return_document=True  # Returns updated document
-        )
-
-        if not update_result:
-            raise ValueError("Organization not found")
-        return update_result
+        try:
+            organization_id = organization_data.get("_id")
+            update_fields = organization_data.copy()
+            update_fields.pop("_id", None)
+            update_result = await self.organizations.find_one_and_update(
+                {"_id": dependencies.try_objectid(organization_id)},
+                {"$set": update_fields},
+                return_document=ReturnDocument.AFTER
+            )
+            if not update_result:
+                raise ValueError("Organization not found")
+            return update_result
+        except Exception as err:
+            return {"success": False, "error": str(err)}
 
     async def delete_organization_data(self, organization_id: str) -> str:
         if not ObjectId.is_valid(organization_id):

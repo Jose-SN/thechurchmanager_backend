@@ -35,3 +35,9 @@ def convert_objectid(obj):
             return [_convert(item) for item in val]
         return val
     return _convert(obj)
+
+def try_objectid(value):
+    try:
+        return ObjectId(value)
+    except Exception:
+        return value  # fallback to string if invalid ObjectId
