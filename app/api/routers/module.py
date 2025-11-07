@@ -27,6 +27,6 @@ async def save_bulk_module(request: Request, module_controller: ModuleController
 async def update_module(request: Request, module_controller: ModuleController = Depends(get_module_controller)):
     return await module_controller.update_module_controller(request)
 
-@module_router.post("/delete/{module_id}")
+@module_router.delete("/delete/{module_id}")
 async def delete_module(module_id: str, module_controller: ModuleController = Depends(get_module_controller)):
     return await module_controller.delete_module_controller(module_id)

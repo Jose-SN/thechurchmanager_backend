@@ -34,6 +34,6 @@ async def save_bulk_teacher(request: Request, teacher_controller: TeacherControl
 async def update_teacher(request: Request, teacher_controller: TeacherController = Depends(get_teacher_controller)):
     return await teacher_controller.update_teacher_controller(request)
 
-@teacher_router.post("/delete/{teacher_id}")
+@teacher_router.delete("/delete/{teacher_id}")
 async def delete_teacher(teacher_id: str, teacher_controller: TeacherController = Depends(get_teacher_controller)):
     return await teacher_controller.delete_teacher_controller(teacher_id)

@@ -34,6 +34,6 @@ async def save_bulk_plan(request: Request, plan_controller: PlanController = Dep
 async def update_plan(request: Request, plan_controller: PlanController = Depends(get_plan_controller)):
     return await plan_controller.update_plan_controller(request)
 
-@plan_router.post("/delete/{plan_id}")
+@plan_router.delete("/delete/{plan_id}")
 async def delete_plan(plan_id: str, plan_controller: PlanController = Depends(get_plan_controller)):
     return await plan_controller.delete_plan_controller(plan_id)

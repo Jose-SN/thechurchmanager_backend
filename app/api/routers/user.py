@@ -41,37 +41,6 @@ async def save_bulk_user(request: Request, user_controller: UserController = Dep
 async def update_user(request: Request, user_controller: UserController = Depends(get_user_controller)):
     return await user_controller.update_user_controller(request)
 
-@user_router.post("/delete/{user_id}")
+@user_router.delete("/delete/{user_id}")
 async def delete_user(user_id: str, user_controller: UserController = Depends(get_user_controller)):
     return await user_controller.delete_user_controller(user_id)
-
-# from fastapi import APIRouter, Depends, Path, Request
-# from app.controller.user import UserController
-# from app.service.user import UserService
-# from motor.motor_asyncio import AsyncIOMotorClient
-# from app.routers import get_db
-
-
-
-# # Dependency to get UserService
-# def get_user_service(db=Depends(get_db)):
-#     return UserService(db)
-
-
-
-
-# # Dependency to get UserController
-# def get_user_controller(user_service=Depends(get_user_service)):
-#     return UserController(user_service)
-
-
-
-
-# user_router = APIRouter(prefix="/user", tags=["User"])
-
-
-
-
-# @user_router.get("/get")
-# async def get_all_users(user_controller: UserController = Depends(get_user_controller)):
-#     return await user_controller.fetch_user_controller()

@@ -34,6 +34,6 @@ async def save_bulk_inventory(request: Request, inventory_controller: InventoryC
 async def update_inventory(request: Request, inventory_controller: InventoryController = Depends(get_inventory_controller)):
     return await inventory_controller.update_inventory_controller(request)
 
-@inventory_router.post("/delete/{inventory_id}")
+@inventory_router.delete("/delete/{inventory_id}")
 async def delete_inventory(inventory_id: str, inventory_controller: InventoryController = Depends(get_inventory_controller)):
     return await inventory_controller.delete_inventory_controller(inventory_id)

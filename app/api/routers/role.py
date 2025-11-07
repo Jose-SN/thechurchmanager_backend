@@ -34,6 +34,6 @@ async def save_bulk_role(request: Request, role_controller: RoleController = Dep
 async def update_role(request: Request, role_controller: RoleController = Depends(get_role_controller)):
     return await role_controller.update_role_controller(request)
 
-@role_router.post("/delete/{role_id}")
+@role_router.delete("/delete/{role_id}")
 async def delete_role(role_id: str, role_controller: RoleController = Depends(get_role_controller)):
     return await role_controller.delete_role_controller(role_id)

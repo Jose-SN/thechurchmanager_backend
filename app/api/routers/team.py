@@ -34,6 +34,6 @@ async def save_bulk_team(request: Request, team_controller: TeamController = Dep
 async def update_team(request: Request, team_controller: TeamController = Depends(get_team_controller)):
     return await team_controller.update_team_controller(request)
 
-@team_router.post("/delete/{team_id}")
+@team_router.delete("/delete/{team_id}")
 async def delete_team(team_id: str, team_controller: TeamController = Depends(get_team_controller)):
     return await team_controller.delete_team_controller(team_id)
