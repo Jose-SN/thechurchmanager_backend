@@ -37,14 +37,17 @@ class TeamController:
                 "message": "Save failed",
                 "error": str(err)
             })
+
     async def save_bulk_team_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.team_service.save_bulk_team_data(body)
+            organization_id = body.get("organization_id")
+            teams = body.get("teams", [])
+            updated_teams = await self.team_service.save_bulk_team_data(teams, organization_id)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": updated_teams
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -53,14 +56,14 @@ class TeamController:
                 "error": str(err)
             })
 
-
     async def update_team_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.team_service.update_team_data(body)
+            updated_team = await self.team_service.update_team_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
-                "message": "Successfully updated"
+                "message": "Successfully updated",
+                "data": updated_team
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
