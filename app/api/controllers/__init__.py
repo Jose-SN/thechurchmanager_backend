@@ -6,6 +6,7 @@ from .organization import OrganizationController
 from .teacher import TeacherController
 from .inventory import InventoryController
 from .plan import PlanController
+from .permission import PermissionController
 
 __all__ = [
     "UserController", 
@@ -14,8 +15,9 @@ __all__ = [
     "ModuleController", 
     "OrganizationController",
     "TeacherController",
-    "InventoryController"
-    "PlanController"
+    "InventoryController",
+    "PlanController",
+    "PermissionController"
     ]
 
 

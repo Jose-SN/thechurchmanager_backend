@@ -6,6 +6,7 @@ from .organization import OrganizationService
 from .teacher import TeacherService
 from .inventory import InventoryService
 from .plan import PlanService
+from .permission import PermissionService
 
 __all__ = [
     "UserService", 
@@ -15,7 +16,8 @@ __all__ = [
     "OrganizationService",
     "TeacherService",
     "InventoryService",
-    "PlanService"
+    "PlanService",
+    "PermissionService",
 ]
 
 
