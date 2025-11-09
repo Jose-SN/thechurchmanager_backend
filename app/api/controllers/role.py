@@ -25,11 +25,11 @@ class RoleController:
     async def save_role_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.role_service.save_role_data(body)
+            result = await self.role_service.save_role_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": result
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={

@@ -29,15 +29,19 @@ class RoleService:
                 role["_id"] = str(role["_id"])
         return roles
 
-    async def save_role_data(self, role_data: dict) -> dict:
+    async def save_role_data(self, role_data: dict):
         # Hash password before save
         # if "password" in role_data and role_data["password"]:
         #     role_data["password"] = pwd_context.hash(role_data["password"])
 
         result = await self.roles.insert_one(role_data)
         role = await self.roles.find_one({"_id": result.inserted_id})
-        return role if role is not None else {}
-    
+        if role:
+            role = dependencies.convert_objectid(role)
+        else:
+            role = {}
+        return role
+
     
     async def save_bulk_role_data(self, roles_data: list[dict]) -> list[dict]:
         """
@@ -58,7 +62,7 @@ class RoleService:
         #     role_data["password"] = pwd_context.hash(role_data["password"])
 
         update_result = await self.roles.find_one_and_update(
-            {"_id": str(role_id)},
+            {"_id": ObjectId(role_id)},
             {"$set": role_data},
             return_document=True  # Returns updated document
         )
@@ -70,5 +74,5 @@ class RoleService:
     async def delete_role_data(self, role_id: str) -> str:
         if not ObjectId.is_valid(role_id):
             raise HTTPException(status_code=400, detail="Invalid role ID")
-        result = await self.roles.find_one_and_delete({"_id": str(role_id)})
+        result = await self.roles.find_one_and_delete({"_id": ObjectId(role_id)})
         return "" if result else "Role not found"
