@@ -50,16 +50,17 @@ class PermissionService:
 
 
     async def update_permission_data(self, permission_data: dict) -> dict:
-        permission_id = permission_data.get("id")
+        permission_id = permission_data.get("_id")
         # if not permission_id or not ObjectId.is_valid(permission_id):
         #     raise ValueError("Invalid permission ID")
 
         # if "password" in permission_data and permission_data["password"]:
         #     permission_data["password"] = pwd_context.hash(permission_data["password"])
-
+        update_fields = permission_data.copy()
+        update_fields.pop("_id", None)
         update_result = await self.permissions.find_one_and_update(
-            {"_id": str(permission_id)},
-            {"$set": permission_data},
+            {"_id": dependencies.try_objectid(permission_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 

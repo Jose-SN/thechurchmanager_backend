@@ -41,16 +41,17 @@ class ModuleService:
 
 
     async def update_module_data(self, module_data: dict) -> dict:
-        module_id = module_data.get("id")
+        module_id = module_data.get("_id")
         # if not module_id or not ObjectId.is_valid(module_id):
         #     raise ValueError("Invalid module ID")
 
         # if "password" in module_data and module_data["password"]:
         #     module_data["password"] = pwd_context.hash(module_data["password"])
-
+        update_fields = module_data.copy()
+        update_fields.pop("_id", None)
         update_result = await self.modules.find_one_and_update(
-            {"_id": str(module_id)},
-            {"$set": module_data},
+            {"_id": dependencies.try_objectid(module_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 

@@ -87,16 +87,19 @@ class TeamService:
 
 
     async def update_team_data(self, team_data: dict) -> dict:
-        team_id = team_data.get("id")
+        team_id = team_data.get("_id")
         # if not team_id or not ObjectId.is_valid(team_id):
         #     raise ValueError("Invalid team ID")
 
         # if "password" in team_data and team_data["password"]:
         #     team_data["password"] = pwd_context.hash(team_data["password"])
 
+        update_fields = team_data.copy()
+        update_fields.pop("_id", None)
+
         update_result = await self.teams.find_one_and_update(
-            {"_id": str(team_id)},
-            {"$set": team_data},
+            {"_id": dependencies.try_objectid(team_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 

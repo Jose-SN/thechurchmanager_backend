@@ -50,16 +50,17 @@ class PlanService:
 
 
     async def update_plan_data(self, plan_data: dict) -> dict:
-        plan_id = plan_data.get("id")
+        plan_id = plan_data.get("_id")
         # if not plan_id or not ObjectId.is_valid(plan_id):
         #     raise ValueError("Invalid plan ID")
 
         # if "password" in plan_data and plan_data["password"]:
         #     plan_data["password"] = pwd_context.hash(plan_data["password"])
-
+        update_fields = plan_data.copy()
+        update_fields.pop("_id", None)
         update_result = await self.plans.find_one_and_update(
-            {"_id": str(plan_id)},
-            {"$set": plan_data},
+            {"_id": dependencies.try_objectid(plan_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 

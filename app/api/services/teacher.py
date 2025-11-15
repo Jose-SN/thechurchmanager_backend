@@ -50,16 +50,17 @@ class TeacherService:
 
 
     async def update_teacher_data(self, teacher_data: dict) -> dict:
-        teacher_id = teacher_data.get("id")
+        teacher_id = teacher_data.get("_id")
         # if not teacher_id or not ObjectId.is_valid(teacher_id):
         #     raise ValueError("Invalid teacher ID")
 
         # if "password" in teacher_data and teacher_data["password"]:
         #     teacher_data["password"] = pwd_context.hash(teacher_data["password"])
-
+        update_fields = teacher_data.copy()
+        update_fields.pop("_id", None)
         update_result = await self.teachers.find_one_and_update(
-            {"_id": str(teacher_id)},
-            {"$set": teacher_data},
+            {"_id": dependencies.try_objectid(teacher_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 

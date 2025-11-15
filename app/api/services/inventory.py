@@ -50,16 +50,18 @@ class InventoryService:
 
 
     async def update_inventory_data(self, inventory_data: dict) -> dict:
-        inventory_id = inventory_data.get("id")
+        inventory_id = inventory_data.get("_id")
         # if not inventory_id or not ObjectId.is_valid(inventory_id):
         #     raise ValueError("Invalid inventory ID")
 
         # if "password" in inventory_data and inventory_data["password"]:
         #     inventory_data["password"] = pwd_context.hash(inventory_data["password"])
 
+        update_fields = inventory_data.copy()
+        update_fields.pop("_id", None)
         update_result = await self.inventorys.find_one_and_update(
-            {"_id": str(inventory_id)},
-            {"$set": inventory_data},
+            {"_id": dependencies.try_objectid(inventory_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 

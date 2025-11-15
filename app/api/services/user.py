@@ -90,16 +90,19 @@ class UserService:
     
     
     async def update_user_data(self, user_data: dict) -> dict:
-        user_id = user_data.get("id")
+        user_id = user_data.get("_id")
         # if not user_id or not ObjectId.is_valid(user_id):
         #     raise ValueError("Invalid user ID")
 
         # if "password" in user_data and user_data["password"]:
         #     user_data["password"] = pwd_context.hash(user_data["password"])
 
+        update_fields = user_data.copy()
+        update_fields.pop("_id", None)
+
         update_result = await self.users.find_one_and_update(
-            {"_id": str(user_id)},
-            {"$set": user_data},
+            {"_id": dependencies.try_objectid(user_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 

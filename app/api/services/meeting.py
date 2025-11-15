@@ -1,6 +1,7 @@
 from typing import Optional, List, Union
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+from app.api import dependencies
 # from schemas import MeetingCreate, MeetingUpdate, MeetingInDB
 
 class MeetingService:
@@ -34,12 +35,12 @@ class MeetingService:
 
         update_data = meeting.dict(exclude_unset=True, exclude={"id", "_id"})
         updated = await self.collection.find_one_and_update(
-            {"_id": ObjectId(meeting_id)},
+            {"_id": dependencies.try_objectid(meeting_id)},
             {"$set": update_data},
             return_document=True
         )
         return updated if updated else None
 
     async def delete_meeting_data(self, meeting_id: str) -> str:
-        result = await self.collection.find_one_and_delete({"_id": ObjectId(meeting_id)})
+        result = await self.collection.find_one_and_delete({"_id": dependencies.try_objectid(meeting_id)})
         return "" if result else "Meeting not found"

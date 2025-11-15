@@ -54,16 +54,17 @@ class RoleService:
 
 
     async def update_role_data(self, role_data: dict) -> dict:
-        role_id = role_data.get("id")
+        role_id = role_data.get("_id")
         # if not role_id or not ObjectId.is_valid(role_id):
         #     raise ValueError("Invalid role ID")
 
         # if "password" in role_data and role_data["password"]:
         #     role_data["password"] = pwd_context.hash(role_data["password"])
-
+        update_fields = role_data.copy()
+        update_fields.pop("_id", None)
         update_result = await self.roles.find_one_and_update(
-            {"_id": ObjectId(role_id)},
-            {"$set": role_data},
+            {"_id": dependencies.try_objectid(role_id)},
+            {"$set": update_fields},
             return_document=True  # Returns updated document
         )
 
