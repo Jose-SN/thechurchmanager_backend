@@ -40,7 +40,9 @@ class PermissionController:
     async def save_bulk_permission_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.permission_service.save_bulk_permission_data(body)
+            organization_id = body.get("organization_id")
+            permissions = body.get("permissions", [])
+            updated_permissions = await self.permission_service.save_bulk_permission_data(permissions, organization_id)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",

@@ -24,6 +24,8 @@ def parse_expiry_to_seconds(expiry: str) -> int:
         return int(expiry)
 
 def convert_objectid(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
     if not isinstance(obj, dict):
         return {}
     def _convert(val):

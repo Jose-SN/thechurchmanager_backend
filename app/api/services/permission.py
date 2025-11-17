@@ -39,14 +39,49 @@ class PermissionService:
         return permission if permission is not None else {}
     
     
-    async def save_bulk_permission_data(self, permissions_data: list[dict]) -> list[dict]:
+    async def save_bulk_permission_data(self, permissions_data: list[dict], organization_id: str) -> list[dict]:
         """
-        Bulk insert permissions and return the inserted permission documents.
+        Save or update multiple permissions.
+        - Updates permissions that already have _id.
+        - Creates new permissions that don't.
+        Returns the full list of updated/created permission documents.
         """
-        result = await self.permissions.insert_many(permissions_data)
-        inserted_ids = result.inserted_ids
-        permissions = await self.permissions.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
-        return permissions
+
+        updated_permissions = []
+
+        for permission in permissions_data:
+            # ✅ If _id exists, try updating
+            if permission.get("_id"):
+                try:
+                    permission_id = str(permission["_id"])
+                    update_data = {k: v for k, v in permission.items() if k != "_id"}
+
+                    updated_permission = await self.permissions.find_one_and_update(
+                        {"_id": dependencies.try_objectid(permission_id)},
+                        {"$set": update_data},
+                        return_document=True
+                    )
+
+                    if updated_permission:
+                        updated_permissions.append(dependencies.convert_objectid(updated_permission))
+                    else:
+                        # fallback: if not found, insert as new
+                        permission["organization_id"] = organization_id
+                        insert_result = await self.permissions.insert_one(permission)
+                        new_permission = await self.permissions.find_one({"_id": insert_result.inserted_id})
+                        
+                        updated_permissions.append(dependencies.convert_objectid(new_permission))
+                except Exception as e:
+                    print(f"⚠️ Error updating permission {permission.get('_id')}: {e}")
+
+            else:
+                # ✅ No _id → new permission
+                permission["organization_id"] = organization_id
+                insert_result = await self.permissions.insert_one(permission)
+                new_permission = await self.permissions.find_one({"_id": insert_result.inserted_id})
+                updated_permissions.append(dependencies.convert_objectid(new_permission))
+
+        return updated_permissions
 
 
     async def update_permission_data(self, permission_data: dict) -> dict:
