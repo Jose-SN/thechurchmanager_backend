@@ -105,7 +105,7 @@ class TeamService:
 
         if not update_result:
             raise ValueError("Team not found")
-        return update_result
+        return dependencies.convert_objectid(update_result)
 
     async def delete_team_data(self, team_id: str) -> str:
         if not ObjectId.is_valid(team_id):
