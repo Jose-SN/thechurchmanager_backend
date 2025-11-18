@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta
+from unittest import result
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
 from uvicorn import Config
 from fastapi import HTTPException
 from bson import ObjectId
+from pymongo import ReturnDocument
 
 from app.api import dependencies
 from app.core.config import settings
-from app.schemas.user import IValidatedUser
 
 class UserService:
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -25,13 +26,37 @@ class UserService:
                     # Invalid ObjectId, will return empty result
                     return []
         users = await self.users.find(query).to_list(length=None)
-        for user in users:
-            if "_id" in user:
-                user["_id"] = str(user["_id"])
+        for org in users:
+            if "_id" in org:
+                org["_id"] = str(org["_id"])
         return users
 
-    async def login_user_data(self, email: str, password: str) -> IValidatedUser:
-        user = await self.users.find_one({"email": email})
+    async def save_user_data(self, user_data: dict):
+        # Hash password before save
+        # if "password" in user_data and user_data["password"]:
+        #     user_data["password"] = pwd_context.hash(user_data["password"])
+
+            result = await self.users.insert_one(user_data)
+            user = await self.users.find_one({"_id": result.inserted_id})
+            if user:
+                user = dependencies.convert_objectid(user)
+            else:
+                user = {}
+            return user
+    
+    
+    async def save_bulk_user_data(self, users_data: list[dict]) -> list[dict]:
+        """
+        Bulk insert users and return the inserted user documents.
+        """
+        result = await self.users.insert_many(users_data)
+        inserted_ids = result.inserted_ids
+        users = await self.users.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
+        return users
+
+
+    async def login_user_data(self, email: str, password: str):
+        user = await self.users.find_one({"contact.email": email})
         if not user:
             raise ValueError("No matching records found")
         # hashed_password = user.get("password")
@@ -39,13 +64,13 @@ class UserService:
         #     raise ValueError("Invalid credentials")
         return await self.generate_authorized_user(user)
 
-    async def generate_authorized_user(self, login_user: dict) -> IValidatedUser:
+    async def generate_authorized_user(self, login_user: dict):
         payload = self.get_jwt_payload(login_user)
         expiry_seconds = dependencies.parse_expiry_to_seconds(settings.JWT_EXPIRY)
         payload["exp"] = datetime.utcnow() + timedelta(seconds=expiry_seconds)
-        token = 'thechurchmanager'  # jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        token = 'thechurchmanager'  # jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
         payload["jwt"] = token
-        return IValidatedUser(**payload)
+        return payload
 
     def get_jwt_payload(self, login_user: dict) -> dict:
         # Compose nested social and contact objects
@@ -77,38 +102,24 @@ class UserService:
             "teams": login_user.get("teams", []),
             "social": social,
             "contact": contact,
+            "status": login_user.get("date_of_birth"),
         }
 
-    async def save_user_data(self, user_data: dict) -> dict:
-        # Hash password before save
-        # if "password" in user_data and user_data["password"]:
-        #     user_data["password"] = pwd_context.hash(user_data["password"])
-
-        result = await self.users.insert_one(user_data)
-        user = await self.users.find_one({"_id": result.inserted_id})
-        return user if user is not None else {}
-    
-    
     async def update_user_data(self, user_data: dict) -> dict:
-        user_id = user_data.get("_id")
-        # if not user_id or not ObjectId.is_valid(user_id):
-        #     raise ValueError("Invalid user ID")
-
-        # if "password" in user_data and user_data["password"]:
-        #     user_data["password"] = pwd_context.hash(user_data["password"])
-
-        update_fields = user_data.copy()
-        update_fields.pop("_id", None)
-
-        update_result = await self.users.find_one_and_update(
-            {"_id": dependencies.try_objectid(user_id)},
-            {"$set": update_fields},
-            return_document=True  # Returns updated document
-        )
-
-        if not update_result:
-            raise ValueError("User not found")
-        return update_result
+        try:
+            user_id = user_data.get("_id")
+            update_fields = user_data.copy()
+            update_fields.pop("_id", None)
+            update_result = await self.users.find_one_and_update(
+                {"_id": dependencies.try_objectid(user_id)},
+                {"$set": update_fields},
+                return_document=ReturnDocument.AFTER
+            )
+            if not update_result:
+                raise ValueError("User not found")
+            return update_result
+        except Exception as err:
+            return {"success": False, "error": str(err)}
 
     async def delete_user_data(self, user_id: str) -> str:
         if not ObjectId.is_valid(user_id):
@@ -116,14 +127,7 @@ class UserService:
         result = await self.users.find_one_and_delete({"_id": str(user_id)})
         return "" if result else "User not found"
 
-    async def save_bulk_user_data(self, users_data: list[dict]) -> list[dict]:
-        """
-        Bulk insert users and return the inserted user documents.
-        """
-        result = await self.users.insert_many(users_data)
-        inserted_ids = result.inserted_ids
-        users = await self.users.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
-        return users
+
 
 
 # from fastapi import Request
@@ -159,7 +163,7 @@ class UserService:
 #     approved: Optional[bool]
 #     relationship: Optional[str]
 #     date_of_birth: Optional[datetime]
-#     organization_id: Optional[str]
+#     user_id: Optional[str]
 #     jwt: Optional[str] = None
 
 
@@ -183,7 +187,7 @@ class UserService:
     #         "approved": login_user.get("approved"),
     #         "relationship": login_user.get("relationship"),
     #         "date_of_birth": login_user.get("date_of_birth") or login_user.get("dateOfBirth"),
-    #         "organization_id": str(login_user.get("organization_id") or login_user.get("organizationId")),
+    #         "user_id": str(login_user.get("user_id") or login_user.get("userId")),
     #     }
 
     # async def generate_authorized_user(self, login_user: dict) -> IValidatedUser:
