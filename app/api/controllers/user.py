@@ -1,7 +1,8 @@
-from fastapi import Request
+from fastapi import Request, dependencies
 from fastapi.encoders import jsonable_encoder
 from app.api.services.user import UserService
 from fastapi.responses import JSONResponse
+from app.api import dependencies
 
 class UserController:
     def __init__(self, user_service: UserService):
@@ -21,39 +22,15 @@ class UserController:
                 "message": "Failed to retrieve user data",
                 "error": str(err)
             })
-        
-    async def validate_user_controller(self, request: Request):
-        body = await request.json()
-        try:
-            email = body.get("email")
-            password = body.get("password")
-            if not email or not password:
-                return JSONResponse(status_code=400, content={
-                    "success": False,
-                    "message": "Validation failed",
-                    "error": "Email and password are required"
-                })
-            data = await self.user_service.login_user_data(email, password)
-            return JSONResponse(status_code=200, content={
-                "success": True,
-                "message": "Validation successful",
-                "data": data.dict() if hasattr(data, 'dict') else data
-                })
-        except Exception as err:
-            return JSONResponse(status_code=400, content={
-                "success": False,
-                "message": "Validation failed",
-                "error": str(err)
-            })
-        
+
     async def save_user_controller(self, request: Request):
         body = await request.json()
         try:
-            result = await self.user_service.save_user_data(body)
+            response = await self.user_service.save_user_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": result
+                "data": response
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -76,11 +53,17 @@ class UserController:
                 "message": "Save failed",
                 "error": str(err)
             })
-
     async def login_user_controller(self, request: Request):
-        body = await request.json()
         try:
-            result = await self.user_service.login_user_data(body.email, body.password)
+            body = await request.json()
+            email = body.get("email")
+            password = body.get("password")
+            result = await self.user_service.login_user_data(email, password)
+            if result:
+                result = dependencies.convert_objectid(result)
+                result = jsonable_encoder(result)  # <-- ensures datetime is serializable
+            else:
+                result = {}
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Login successful",
@@ -93,13 +76,13 @@ class UserController:
                 "error": str(err)
             })
 
+
     async def update_user_controller(self, request: Request):
         body = await request.json()
         try:
             await self.user_service.update_user_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
-                "data": body,
                 "message": "Successfully updated"
             })
         except Exception as err:

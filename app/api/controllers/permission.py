@@ -46,7 +46,7 @@ class PermissionController:
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": updated_permissions
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
