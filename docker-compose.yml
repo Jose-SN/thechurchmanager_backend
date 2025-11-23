@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000" # Mapping host port 5000 to container port 5000
+    environment:
+      # Common
+      PORT: 5000
+      JWT_SECRET: TheChurchManager@2025
+      JWT_EXPIRY: 30d
+      FILEUPLOADLIMIT: 5
+
+      # Mongo
+      MONGO_URI: mongodb://mongo:27017/TheChurchManager # mongo is the service name for the mongo container
+      MONGO_DATABASE_NAME: TheChurchManager
+      MONGO_PROD_URI: "mongodb+srv://petaxailtd:Petaxailtd%40123@betrack.dtmqf.mongodb.net/?retryWrites=true&w=majority&appName=TheChurchManager"
+
+      GMAIL_USERNAME: petaxailtd@gmail.com
+      GMAIL_PASS: "jbbu ruci hsvl gkst"
+
+      # EC2
+      EC2_PUBLIC_IP: 18.175.122.53
+      ENABLED_PROTOCOL: http
+      AWS_ACCESS_KEY_ID: AKIAX5ZI6K5JRTAF2DUO
+      AWS_SECRET_ACCESS_KEY: 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
+      S3_BUCKET_NAME: betrack
+      AWS_REGION: eu-west-2
+    depends_on:
+      - mongo
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

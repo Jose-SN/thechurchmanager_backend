@@ -11,11 +11,8 @@ apscheduler
 boto3
 httpx
 websockets
-slowapi  # for rate limiting
+slowapi
 email-validator
-aiosmtplib  # or yagmail if preferred for email sending
-odmantic
+aiosmtplib
 beanie
-motor.motor_asyncio
-mongoengine
-jwt
+pydantic-settings==2.0.3
