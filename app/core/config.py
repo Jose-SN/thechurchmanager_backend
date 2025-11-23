@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator
 
-load_dotenv('./../.env')
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 class Settings(BaseSettings):
     PORT: int = Field(default=8000, validation_alias='PORT')
@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
+        env_file_encoding='utf-8',
         extra="ignore"
     )
 
