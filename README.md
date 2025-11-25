@@ -39,7 +39,10 @@ docker run -p 8080:8080 fastapi-app
 
 ```bash
 aws login
+```
+If login manually, then below code is not needed
 
+```bash
 aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 545009850195.dkr.ecr.eu-west-2.amazonaws.com
 ```
 
