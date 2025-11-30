@@ -81,3 +81,12 @@ Usage
 3. Deploy and run locally:
 
     ./deploy.py --run-local
+
+
+# AWS RDS PostgreSQL connection
+DB_HOST=thechurchmanager.c9isu0cg43l5.eu-west-2.rds.amazonaws.com
+DB_PORT=5432
+DB_NAME=thechurchmanager
+DB_USER=your_master_username
+DB_PASSWORD=your_password
+DB_SSL=true
