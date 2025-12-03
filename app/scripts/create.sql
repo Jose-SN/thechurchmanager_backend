@@ -1,0 +1,1 @@
+CREATE DATABASE thechurchmanager IF NOT EXISTS;
