@@ -1,76 +1,75 @@
-from datetime import datetime, timedelta
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
-from uvicorn import Config
 from fastapi import HTTPException
-from bson import ObjectId
+import asyncpg
 
-from app.api import dependencies
-from app.core.config import Settings
+from app.queries.inventory import (
+    GET_INVENTORIES_QUERY,
+    GET_INVENTORY_BY_ID_QUERY,
+    INSERT_INVENTORY_QUERY,
+    INSERT_BULK_INVENTORIES_QUERY,
+    UPDATE_INVENTORY_QUERY,
+    DELETE_INVENTORY_QUERY,
+)
 
 class InventoryService:
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.db = db
-        self.inventorys = db["inventorys"]
+    def __init__(self, db_pool: asyncpg.Pool):
+        self.db_pool = db_pool
 
     async def get_inventory_data(self, filters: dict = {}) -> List[dict]:
-        query = {}
-        if filters:
-            query = filters.copy()
-            if "_id" in query:
-                try:
-                    query["_id"] = ObjectId(query["_id"])
-                except Exception:
-                    # Invalid ObjectId, will return empty result
-                    return []
-        inventorys = await self.inventorys.find(query).to_list(length=None)
-        for inventory in inventorys:
-            if "_id" in inventory:
-                inventory["_id"] = str(inventory["_id"])
-        return inventorys
+        async with self.db_pool.acquire() as conn:
+            if "_id" in filters or "id" in filters:
+                inventory_id = filters.get("_id") or filters.get("id")
+                inventory = await conn.fetchrow(GET_INVENTORY_BY_ID_QUERY, inventory_id)
+                if inventory:
+                    return [dict(inventory)]
+                return []
+            rows = await conn.fetch(GET_INVENTORIES_QUERY)
+            return [dict(row) for row in rows]
 
     async def save_inventory_data(self, inventory_data: dict) -> dict:
-        # Hash password before save
-        # if "password" in inventory_data and inventory_data["password"]:
-        #     inventory_data["password"] = pwd_context.hash(inventory_data["password"])
+        async with self.db_pool.acquire() as conn:
+            # Extract values in the correct order for INSERT_INVENTORY_QUERY
+            name = inventory_data.get("name", "")
+            description = inventory_data.get("description", "")
+            quantity = inventory_data.get("quantity", 0)
+            row = await conn.fetchrow(INSERT_INVENTORY_QUERY, name, description, quantity)
+            return dict(row) if row else {}
 
-        result = await self.inventorys.insert_one(inventory_data)
-        inventory = await self.inventorys.find_one({"_id": result.inserted_id})
-        return inventory if inventory is not None else {}
-    
-    
     async def save_bulk_inventory_data(self, inventorys_data: list[dict]) -> list[dict]:
         """
-        Bulk insert inventorys and return the inserted inventory documents.
+        Bulk insert inventories and return the inserted inventory documents.
         """
-        result = await self.inventorys.insert_many(inventorys_data)
-        inserted_ids = result.inserted_ids
-        inventorys = await self.inventorys.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
-        return inventorys
-
+        rows = []
+        async with self.db_pool.acquire() as conn:
+            async with conn.transaction():
+                for inventory in inventorys_data:
+                    name = inventory.get("name", "")
+                    description = inventory.get("description", "")
+                    quantity = inventory.get("quantity", 0)
+                    row = await conn.fetchrow(INSERT_INVENTORY_QUERY, name, description, quantity)
+                    if row:
+                        rows.append(dict(row))
+        return rows
 
     async def update_inventory_data(self, inventory_data: dict) -> dict:
-        inventory_id = inventory_data.get("_id")
-        # if not inventory_id or not ObjectId.is_valid(inventory_id):
-        #     raise ValueError("Invalid inventory ID")
-
-        # if "password" in inventory_data and inventory_data["password"]:
-        #     inventory_data["password"] = pwd_context.hash(inventory_data["password"])
-
-        update_fields = inventory_data.copy()
-        update_fields.pop("_id", None)
-        update_result = await self.inventorys.find_one_and_update(
-            {"_id": dependencies.try_objectid(inventory_id)},
-            {"$set": update_fields},
-            return_document=True  # Returns updated document
-        )
-
-        if not update_result:
-            raise ValueError("Inventory not found")
-        return update_result
+        inventory_id = inventory_data.get("_id") or inventory_data.get("id")
+        if not inventory_id:
+            raise HTTPException(status_code=400, detail="Inventory ID is required")
+        
+        async with self.db_pool.acquire() as conn:
+            update_data = {k: v for k, v in inventory_data.items() if k not in ("_id", "id")}
+            name = update_data.get("name", "")
+            description = update_data.get("description", "")
+            quantity = update_data.get("quantity", 0)
+            
+            row = await conn.fetchrow(UPDATE_INVENTORY_QUERY, name, description, quantity, inventory_id)
+            if not row:
+                raise ValueError("Inventory not found")
+            return dict(row)
 
     async def delete_inventory_data(self, inventory_id: str) -> str:
-        if not ObjectId.is_valid(inventory_id):
-            raise HTTPException(status_code=400, detail="Invalid inventory ID")
-        result = await self.inventorys.find_one_and_delete({"_id": str(inventory_id)})
-        return "" if result else "Inventory not found"
+        async with self.db_pool.acquire() as conn:
+            result = await conn.execute(DELETE_INVENTORY_QUERY, inventory_id)
+            if result and result.startswith("DELETE"):
+                return ""
+            return "Inventory not found"

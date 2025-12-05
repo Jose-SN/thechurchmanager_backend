@@ -1,75 +1,72 @@
-from datetime import datetime, timedelta
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
-from uvicorn import Config
 from fastapi import HTTPException
-from bson import ObjectId
+import asyncpg
 
-from app.api import dependencies
-from app.core.config import Settings
+from app.queries.plan import (
+    GET_PLANS_QUERY,
+    GET_PLAN_BY_ID_QUERY,
+    INSERT_PLAN_QUERY,
+    INSERT_BULK_PLANS_QUERY,
+    UPDATE_PLAN_QUERY,
+    DELETE_PLAN_QUERY,
+)
 
 class PlanService:
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.db = db
-        self.plans = db["plans"]
+    def __init__(self, db_pool: asyncpg.Pool):
+        self.db_pool = db_pool
 
     async def get_plan_data(self, filters: dict = {}) -> List[dict]:
-        query = {}
-        if filters:
-            query = filters.copy()
-            if "_id" in query:
-                try:
-                    query["_id"] = ObjectId(query["_id"])
-                except Exception:
-                    # Invalid ObjectId, will return empty result
-                    return []
-        plans = await self.plans.find(query).to_list(length=None)
-        for plan in plans:
-            if "_id" in plan:
-                plan["_id"] = str(plan["_id"])
-        return plans
+        async with self.db_pool.acquire() as conn:
+            if "_id" in filters or "id" in filters:
+                plan_id = filters.get("_id") or filters.get("id")
+                plan = await conn.fetchrow(GET_PLAN_BY_ID_QUERY, plan_id)
+                if plan:
+                    return [dict(plan)]
+                return []
+            rows = await conn.fetch(GET_PLANS_QUERY)
+            return [dict(row) for row in rows]
 
     async def save_plan_data(self, plan_data: dict) -> dict:
-        # Hash password before save
-        # if "password" in plan_data and plan_data["password"]:
-        #     plan_data["password"] = pwd_context.hash(plan_data["password"])
+        async with self.db_pool.acquire() as conn:
+            # Extract values in the correct order for INSERT_PLAN_QUERY
+            name = plan_data.get("name", "")
+            description = plan_data.get("description", "")
+            row = await conn.fetchrow(INSERT_PLAN_QUERY, name, description)
+            return dict(row) if row else {}
 
-        result = await self.plans.insert_one(plan_data)
-        plan = await self.plans.find_one({"_id": result.inserted_id})
-        return plan if plan is not None else {}
-    
-    
     async def save_bulk_plan_data(self, plans_data: list[dict]) -> list[dict]:
         """
         Bulk insert plans and return the inserted plan documents.
         """
-        result = await self.plans.insert_many(plans_data)
-        inserted_ids = result.inserted_ids
-        plans = await self.plans.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
-        return plans
-
+        rows = []
+        async with self.db_pool.acquire() as conn:
+            async with conn.transaction():
+                for plan in plans_data:
+                    name = plan.get("name", "")
+                    description = plan.get("description", "")
+                    row = await conn.fetchrow(INSERT_PLAN_QUERY, name, description)
+                    if row:
+                        rows.append(dict(row))
+        return rows
 
     async def update_plan_data(self, plan_data: dict) -> dict:
-        plan_id = plan_data.get("_id")
-        # if not plan_id or not ObjectId.is_valid(plan_id):
-        #     raise ValueError("Invalid plan ID")
-
-        # if "password" in plan_data and plan_data["password"]:
-        #     plan_data["password"] = pwd_context.hash(plan_data["password"])
-        update_fields = plan_data.copy()
-        update_fields.pop("_id", None)
-        update_result = await self.plans.find_one_and_update(
-            {"_id": dependencies.try_objectid(plan_id)},
-            {"$set": update_fields},
-            return_document=True  # Returns updated document
-        )
-
-        if not update_result:
-            raise ValueError("Plan not found")
-        return update_result
+        plan_id = plan_data.get("_id") or plan_data.get("id")
+        if not plan_id:
+            raise HTTPException(status_code=400, detail="Plan ID is required")
+        
+        async with self.db_pool.acquire() as conn:
+            update_data = {k: v for k, v in plan_data.items() if k not in ("_id", "id")}
+            name = update_data.get("name", "")
+            description = update_data.get("description", "")
+            
+            row = await conn.fetchrow(UPDATE_PLAN_QUERY, name, description, plan_id)
+            if not row:
+                raise ValueError("Plan not found")
+            return dict(row)
 
     async def delete_plan_data(self, plan_id: str) -> str:
-        if not ObjectId.is_valid(plan_id):
-            raise HTTPException(status_code=400, detail="Invalid plan ID")
-        result = await self.plans.find_one_and_delete({"_id": str(plan_id)})
-        return "" if result else "Plan not found"
+        async with self.db_pool.acquire() as conn:
+            result = await conn.execute(DELETE_PLAN_QUERY, plan_id)
+            if result and result.startswith("DELETE"):
+                return ""
+            return "Plan not found"
