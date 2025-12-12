@@ -1,66 +1,81 @@
-from datetime import datetime, timedelta
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
-from uvicorn import Config
 from fastapi import HTTPException
-from bson import ObjectId
+import asyncpg
 
-from app.api import dependencies
-from app.core.config import Settings
+from app.queries.module import (
+    GET_MODULES_QUERY,
+    GET_MODULE_BY_ID_QUERY,
+    GET_MODULES_BY_ORGANIZATION_QUERY,
+    INSERT_MODULE_QUERY,
+    INSERT_BULK_MODULES_QUERY,
+    UPDATE_MODULE_QUERY,
+    DELETE_MODULE_QUERY,
+)
 
 class ModuleService:
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.db = db
-        self.modules = db["modules"]
+    def __init__(self, db_pool: asyncpg.Pool):
+        self.db_pool = db_pool
 
-    async def get_module_data(self) -> List[dict]:
-        modules = await self.modules.find({}).to_list(length=None)
-        for module in modules:
-            if "_id" in module:
-                module["_id"] = str(module["_id"])
-        return modules
+    async def get_module_data(self, filters: dict = {}) -> List[dict]:
+        async with self.db_pool.acquire() as conn:
+            if "id" in filters or "_id" in filters:
+                module_id = filters.get("id") or filters.get("_id")
+                module = await conn.fetchrow(GET_MODULE_BY_ID_QUERY, module_id)
+                if module:
+                    return [dict(module)]
+                return []
+            elif "organization_id" in filters:
+                rows = await conn.fetch(GET_MODULES_BY_ORGANIZATION_QUERY, filters["organization_id"])
+                return [dict(row) for row in rows]
+            rows = await conn.fetch(GET_MODULES_QUERY)
+            return [dict(row) for row in rows]
 
     async def save_module_data(self, module_data: dict) -> dict:
-        # Hash password before save
-        # if "password" in module_data and module_data["password"]:
-        #     module_data["password"] = pwd_context.hash(module_data["password"])
+        async with self.db_pool.acquire() as conn:
+            # Extract values in the correct order for INSERT_MODULE_QUERY
+            name = module_data.get("name", "")
+            description = module_data.get("description", "")
+            organization_id = module_data.get("organization_id")
+            
+            row = await conn.fetchrow(INSERT_MODULE_QUERY, name, description, organization_id)
+            return dict(row) if row else {}
 
-        result = await self.modules.insert_one(module_data)
-        module = await self.modules.find_one({"_id": result.inserted_id})
-        return module if module is not None else {}
-    
-    
     async def save_bulk_module_data(self, modules_data: list[dict]) -> list[dict]:
         """
         Bulk insert modules and return the inserted module documents.
         """
-        result = await self.modules.insert_many(modules_data)
-        inserted_ids = result.inserted_ids
-        modules = await self.modules.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
-        return modules
-
+        rows = []
+        async with self.db_pool.acquire() as conn:
+            async with conn.transaction():
+                for module in modules_data:
+                    name = module.get("name", "")
+                    description = module.get("description", "")
+                    organization_id = module.get("organization_id")
+                    
+                    row = await conn.fetchrow(INSERT_MODULE_QUERY, name, description, organization_id)
+                    if row:
+                        rows.append(dict(row))
+        return rows
 
     async def update_module_data(self, module_data: dict) -> dict:
-        module_id = module_data.get("_id")
-        # if not module_id or not ObjectId.is_valid(module_id):
-        #     raise ValueError("Invalid module ID")
-
-        # if "password" in module_data and module_data["password"]:
-        #     module_data["password"] = pwd_context.hash(module_data["password"])
-        update_fields = module_data.copy()
-        update_fields.pop("_id", None)
-        update_result = await self.modules.find_one_and_update(
-            {"_id": dependencies.try_objectid(module_id)},
-            {"$set": update_fields},
-            return_document=True  # Returns updated document
-        )
-
-        if not update_result:
-            raise ValueError("Module not found")
-        return update_result
+        module_id = module_data.get("id") or module_data.get("_id")
+        if not module_id:
+            raise HTTPException(status_code=400, detail="Module ID is required")
+        
+        async with self.db_pool.acquire() as conn:
+            update_data = {k: v for k, v in module_data.items() if k not in ("_id", "id")}
+            name = update_data.get("name", "")
+            description = update_data.get("description", "")
+            organization_id = update_data.get("organization_id", "")
+            
+            row = await conn.fetchrow(UPDATE_MODULE_QUERY, name, description, organization_id, module_id)
+            if not row:
+                raise ValueError("Module not found")
+            return dict(row)
 
     async def delete_module_data(self, module_id: str) -> str:
-        if not ObjectId.is_valid(module_id):
-            raise HTTPException(status_code=400, detail="Invalid module ID")
-        result = await self.modules.find_one_and_delete({"_id": str(module_id)})
-        return "" if result else "Module not found"
+        async with self.db_pool.acquire() as conn:
+            result = await conn.execute(DELETE_MODULE_QUERY, module_id)
+            if result and result.startswith("DELETE"):
+                return ""
+            return "Module not found"

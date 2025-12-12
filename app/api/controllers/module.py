@@ -7,9 +7,9 @@ class ModuleController:
     def __init__(self, module_service: ModuleService):
         self.module_service = module_service
 
-    async def fetch_module_controller(self):
+    async def fetch_module_controller(self, filters: dict = {}):
         try:
-            modules = await self.module_service.get_module_data()
+            modules = await self.module_service.get_module_data(filters)
             data = jsonable_encoder(modules)
             return JSONResponse(status_code=200, content={
                 "success": True,
@@ -25,11 +25,11 @@ class ModuleController:
     async def save_module_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.module_service.save_module_data(body)
+            result = await self.module_service.save_module_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": result
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -40,11 +40,11 @@ class ModuleController:
     async def save_bulk_module_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.module_service.save_bulk_module_data(body)
+            result = await self.module_service.save_bulk_module_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": result
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -57,10 +57,11 @@ class ModuleController:
     async def update_module_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.module_service.update_module_data(body)
+            result = await self.module_service.update_module_data(body)
             return JSONResponse(status_code=200, content={
                 "success": True,
-                "message": "Successfully updated"
+                "message": "Successfully updated",
+                "data": result
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={

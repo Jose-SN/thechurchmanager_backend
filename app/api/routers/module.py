@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from app.api.controllers import UserController, ModuleController
 from app.api.services import UserService, ModuleService
 from app.api.dependencies import get_db
@@ -12,8 +12,15 @@ def get_module_controller(module_service=Depends(get_module_service)):
     return ModuleController(module_service)
 
 @module_router.get("/get")
-async def get_all_modules(module_controller: ModuleController = Depends(get_module_controller)):
-    return await module_controller.fetch_module_controller()
+async def get_all_modules(module_controller: ModuleController = Depends(get_module_controller),
+    id: str = Query(None),
+    organization_id: str = Query(None)):
+    filters = {}
+    if id:
+        filters["id"] = id
+    if organization_id:
+        filters["organization_id"] = organization_id
+    return await module_controller.fetch_module_controller(filters)
 
 @module_router.post("/save")
 async def save_module(request: Request, module_controller: ModuleController = Depends(get_module_controller)):
