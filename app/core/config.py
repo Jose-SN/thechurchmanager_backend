@@ -14,6 +14,15 @@ class Settings(BaseSettings):
     JWT_EXPIRY: str = Field(default='30d', validation_alias='JWT_EXPIRY')
     GMAIL_USERNAME: str = Field(default='', validation_alias='GMAIL_USERNAME')
     GMAIL_PASS: str = Field(default='', validation_alias='GMAIL_PASS')
+    
+    # PostgreSQL settings
+    POSTGRESQL_DB_HOST: str = Field(default='localhost', validation_alias='POSTGRESQL_DB_HOST')
+    POSTGRESQL_DB_PORT: int = Field(default=5432, validation_alias='POSTGRESQL_DB_PORT')
+    POSTGRESQL_DB_USER: str = Field(default='', validation_alias='POSTGRESQL_DB_USER')
+    POSTGRESQL_DB_PASSWORD: str = Field(default='', validation_alias='POSTGRESQL_DB_PASSWORD')
+    POSTGRESQL_DB_NAME: str = Field(default='', validation_alias='POSTGRESQL_DB_NAME')
+    POSTGRESQL_SSL_MODE: str = Field(default='prefer', validation_alias='POSTGRESQL_SSL_MODE')
+    POSTGRESQL_SSL_REJECT_UNAUTHORIZED: bool = Field(default=False, validation_alias='POSTGRESQL_SSL_REJECT_UNAUTHORIZED')
 
     model_config = SettingsConfigDict(
         env_file=".env",
