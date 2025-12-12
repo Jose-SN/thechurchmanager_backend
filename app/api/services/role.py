@@ -1,79 +1,110 @@
-from datetime import datetime, timedelta
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
-from uvicorn import Config
 from fastapi import HTTPException
-from bson import ObjectId
+import asyncpg
+import json
 
-from app.api import dependencies
-from app.core.config import Settings
+from app.queries.role import (
+    GET_ROLES_QUERY,
+    GET_ROLE_BY_ID_QUERY,
+    GET_ROLES_BY_ORGANIZATION_QUERY,
+    GET_ROLES_BY_TEAM_QUERY,
+    INSERT_ROLE_QUERY,
+    INSERT_BULK_ROLES_QUERY,
+    UPDATE_ROLE_QUERY,
+    DELETE_ROLE_QUERY,
+)
 
 class RoleService:
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.db = db
-        self.roles = db["roles"]
+    def __init__(self, db_pool: asyncpg.Pool):
+        self.db_pool = db_pool
 
     async def get_role_data(self, filters: dict = {}) -> List[dict]:
-        query = {}
-        if filters:
-            query = filters.copy()
-            if "_id" in query:
-                try:
-                    query["_id"] = ObjectId(query["_id"])
-                except Exception:
-                    # Invalid ObjectId, will return empty result
-                    return []
-        roles = await self.roles.find(query).to_list(length=None)
-        for role in roles:
-            if "_id" in role:
-                role["_id"] = str(role["_id"])
-        return roles
+        async with self.db_pool.acquire() as conn:
+            if "id" in filters or "_id" in filters:
+                role_id = filters.get("id") or filters.get("_id")
+                role = await conn.fetchrow(GET_ROLE_BY_ID_QUERY, role_id)
+                if role:
+                    return [dict(role)]
+                return []
+            elif "organization_id" in filters:
+                rows = await conn.fetch(GET_ROLES_BY_ORGANIZATION_QUERY, filters["organization_id"])
+                return [dict(row) for row in rows]
+            elif "team_id" in filters:
+                rows = await conn.fetch(GET_ROLES_BY_TEAM_QUERY, filters["team_id"])
+                return [dict(row) for row in rows]
+            rows = await conn.fetch(GET_ROLES_QUERY)
+            return [dict(row) for row in rows]
 
-    async def save_role_data(self, role_data: dict):
-        # Hash password before save
-        # if "password" in role_data and role_data["password"]:
-        #     role_data["password"] = pwd_context.hash(role_data["password"])
+    async def save_role_data(self, role_data: dict) -> dict:
+        async with self.db_pool.acquire() as conn:
+            # Extract values in the correct order for INSERT_ROLE_QUERY
+            name = role_data.get("name", "")
+            description = role_data.get("description", "")
+            team_id = role_data.get("team_id")
+            organization_id = role_data.get("organization_id")
+            type = role_data.get("type", "")
+            # Convert permissions to JSON string for JSONB column
+            permissions = role_data.get("permissions", [])
+            if isinstance(permissions, (list, dict)):
+                permissions = json.dumps(permissions)
+            elif permissions is None:
+                permissions = json.dumps([])
+            
+            row = await conn.fetchrow(INSERT_ROLE_QUERY, name, description, team_id, organization_id, type, permissions)
+            return dict(row) if row else {}
 
-        result = await self.roles.insert_one(role_data)
-        role = await self.roles.find_one({"_id": result.inserted_id})
-        if role:
-            role = dependencies.convert_objectid(role)
-        else:
-            role = {}
-        return role
-
-    
     async def save_bulk_role_data(self, roles_data: list[dict]) -> list[dict]:
         """
         Bulk insert roles and return the inserted role documents.
         """
-        result = await self.roles.insert_many(roles_data)
-        inserted_ids = result.inserted_ids
-        roles = await self.roles.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
-        return roles
-
+        rows = []
+        async with self.db_pool.acquire() as conn:
+            async with conn.transaction():
+                for role in roles_data:
+                    name = role.get("name", "")
+                    description = role.get("description", "")
+                    team_id = role.get("team_id")
+                    organization_id = role.get("organization_id")
+                    type = role.get("type", "")
+                    # Convert permissions to JSON string for JSONB column
+                    permissions = role.get("permissions", [])
+                    if isinstance(permissions, (list, dict)):
+                        permissions = json.dumps(permissions)
+                    elif permissions is None:
+                        permissions = json.dumps([])
+                    
+                    row = await conn.fetchrow(INSERT_ROLE_QUERY, name, description, team_id, organization_id, type, permissions)
+                    if row:
+                        rows.append(dict(row))
+        return rows
 
     async def update_role_data(self, role_data: dict) -> dict:
-        role_id = role_data.get("_id")
-        # if not role_id or not ObjectId.is_valid(role_id):
-        #     raise ValueError("Invalid role ID")
-
-        # if "password" in role_data and role_data["password"]:
-        #     role_data["password"] = pwd_context.hash(role_data["password"])
-        update_fields = role_data.copy()
-        update_fields.pop("_id", None)
-        update_result = await self.roles.find_one_and_update(
-            {"_id": dependencies.try_objectid(role_id)},
-            {"$set": update_fields},
-            return_document=True  # Returns updated document
-        )
-
-        if not update_result:
-            raise ValueError("Role not found")
-        return update_result
+        role_id = role_data.get("id") or role_data.get("_id")
+        if not role_id:
+            raise HTTPException(status_code=400, detail="Role ID is required")
+        
+        async with self.db_pool.acquire() as conn:
+            update_data = {k: v for k, v in role_data.items() if k not in ("_id", "id")}
+            name = update_data.get("name", "")
+            description = update_data.get("description", "")
+            team_id = update_data.get("team_id")
+            organization_id = update_data.get("organization_id", "")
+            type = update_data.get("type", "")
+            # Convert permissions to JSON string for JSONB column
+            permissions = update_data.get("permissions", [])
+            if isinstance(permissions, (list, dict)):
+                permissions = json.dumps(permissions)
+            elif permissions is None:
+                permissions = json.dumps([])
+            
+            row = await conn.fetchrow(UPDATE_ROLE_QUERY, name, description, team_id, organization_id, type, permissions, role_id)
+            if not row:
+                raise ValueError("Role not found")
+            return dict(row)
 
     async def delete_role_data(self, role_id: str) -> str:
-        if not ObjectId.is_valid(role_id):
-            raise HTTPException(status_code=400, detail="Invalid role ID")
-        result = await self.roles.find_one_and_delete({"_id": ObjectId(role_id)})
-        return "" if result else "Role not found"
+        async with self.db_pool.acquire() as conn:
+            result = await conn.execute(DELETE_ROLE_QUERY, role_id)
+            if result and result.startswith("DELETE"):
+                return ""
+            return "Role not found"
