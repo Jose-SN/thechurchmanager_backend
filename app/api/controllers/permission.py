@@ -25,11 +25,12 @@ class PermissionController:
     async def save_permission_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.permission_service.save_permission_data(body)
+            result = await self.permission_service.save_permission_data(body)
+            data = jsonable_encoder(result)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -43,10 +44,11 @@ class PermissionController:
             organization_id = body.get("organization_id")
             permissions = body.get("permissions", [])
             updated_permissions = await self.permission_service.save_bulk_permission_data(permissions, organization_id)
+            data = jsonable_encoder(updated_permissions)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": updated_permissions
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -59,10 +61,12 @@ class PermissionController:
     async def update_permission_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.permission_service.update_permission_data(body)
+            result = await self.permission_service.update_permission_data(body)
+            data = jsonable_encoder(result)
             return JSONResponse(status_code=200, content={
                 "success": True,
-                "message": "Successfully updated"
+                "message": "Successfully updated",
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={

@@ -13,13 +13,22 @@ def get_permission_controller(permission_service=Depends(get_permission_service)
 
 @permission_router.get("/get")
 async def get_all_permissions(permission_controller: PermissionController = Depends(get_permission_controller),
-    _id: str = Query(None),
-    organization_id: str = Query(None)):
+    id: str = Query(None),
+    organization_id: str = Query(None),
+    role_id: str = Query(None),
+    module_id: str = Query(None),
+    team_id: str = Query(None)):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
+    if role_id:
+        filters["role_id"] = role_id
+    if module_id:
+        filters["module_id"] = module_id
+    if team_id:
+        filters["team_id"] = team_id
     return await permission_controller.fetch_permission_controller(filters)
 
 @permission_router.post("/save")
