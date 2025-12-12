@@ -35,7 +35,8 @@ class TeamService:
             # Extract values in the correct order for INSERT_TEAM_QUERY
             name = team_data.get("name", "")
             organization_id = team_data.get("organization_id")
-            row = await conn.fetchrow(INSERT_TEAM_QUERY, name, organization_id)
+            description = team_data.get("description", "")
+            row = await conn.fetchrow(INSERT_TEAM_QUERY, name, description, organization_id)
             return dict(row) if row else {}
 
     async def save_bulk_team_data(self, teams_data: list[dict], organization_id: str) -> list[dict]:
@@ -56,28 +57,32 @@ class TeamService:
                         try:
                             update_data = {k: v for k, v in team.items() if k not in ("_id", "id")}
                             name = update_data.get("name", "")
+                            description = update_data.get("description", "")
                             org_id = update_data.get("organization_id", organization_id)
                             
-                            row = await conn.fetchrow(UPDATE_TEAM_QUERY, name, org_id, team_id)
+                            row = await conn.fetchrow(UPDATE_TEAM_QUERY, name, description, org_id, team_id)
                             if row:
                                 updated_teams.append(dict(row))
                             else:
                                 # Fallback: if not found, insert as new
                                 name = team.get("name", "")
-                                row = await conn.fetchrow(INSERT_TEAM_QUERY, name, organization_id)
+                                description = team.get("description", "")
+                                row = await conn.fetchrow(INSERT_TEAM_QUERY, name, description, organization_id)
                                 if row:
                                     updated_teams.append(dict(row))
                         except Exception as e:
                             print(f"⚠️ Error updating team {team_id}: {e}")
                             # Fallback: insert as new
                             name = team.get("name", "")
-                            row = await conn.fetchrow(INSERT_TEAM_QUERY, name, organization_id)
+                            description = team.get("description", "")
+                            row = await conn.fetchrow(INSERT_TEAM_QUERY, name, description, organization_id)
                             if row:
                                 updated_teams.append(dict(row))
                     else:
                         # No id → new team
                         name = team.get("name", "")
-                        row = await conn.fetchrow(INSERT_TEAM_QUERY, name, organization_id)
+                        description = team.get("description", "")
+                        row = await conn.fetchrow(INSERT_TEAM_QUERY, name, description, organization_id)
                         if row:
                             updated_teams.append(dict(row))
         
@@ -91,9 +96,10 @@ class TeamService:
         async with self.db_pool.acquire() as conn:
             update_data = {k: v for k, v in team_data.items() if k not in ("_id", "id")}
             name = update_data.get("name", "")
+            description = update_data.get("description", "")
             organization_id = update_data.get("organization_id", "")
             
-            row = await conn.fetchrow(UPDATE_TEAM_QUERY, name, organization_id, team_id)
+            row = await conn.fetchrow(UPDATE_TEAM_QUERY, name, description, organization_id, team_id)
             if not row:
                 raise ValueError("Team not found")
             return dict(row)

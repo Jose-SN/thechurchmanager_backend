@@ -11,21 +11,21 @@ SELECT * FROM teams WHERE organization_id = $1
 """
 
 INSERT_TEAM_QUERY = """
-INSERT INTO teams (name, organization_id, created_at, updated_at)
-VALUES ($1, $2, NOW(), NOW())
+INSERT INTO teams (name, description, organization_id, created_at, updated_at)
+VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING *
 """
 
 INSERT_BULK_TEAMS_QUERY = """
-INSERT INTO teams (name, organization_id, created_at, updated_at)
-VALUES ($1, $2, NOW(), NOW())
+INSERT INTO teams (name, description, organization_id, created_at, updated_at)
+VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING *
 """
 
 UPDATE_TEAM_QUERY = """
 UPDATE teams
-SET name = $1, organization_id = $2, updated_at = NOW()
-WHERE id = $3
+SET name = $1, description = $2, organization_id = $3, updated_at = NOW()
+WHERE id = $4
 RETURNING *
 """
 

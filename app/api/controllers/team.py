@@ -25,11 +25,12 @@ class TeamController:
     async def save_team_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.team_service.save_team_data(body)
+            result =await self.team_service.save_team_data(body)
+            data = jsonable_encoder(result)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -60,10 +61,11 @@ class TeamController:
         body = await request.json()
         try:
             updated_team = await self.team_service.update_team_data(body)
+            data = jsonable_encoder(updated_team)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully updated",
-                "data": updated_team
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
