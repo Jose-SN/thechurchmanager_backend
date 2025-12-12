@@ -26,10 +26,11 @@ class RoleController:
         body = await request.json()
         try:
             result = await self.role_service.save_role_data(body)
+            data = jsonable_encoder(result)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": result
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -40,11 +41,12 @@ class RoleController:
     async def save_bulk_role_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.role_service.save_bulk_role_data(body)
+            result = await self.role_service.save_bulk_role_data(body)
+            data = jsonable_encoder(result)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": body
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
@@ -57,10 +59,12 @@ class RoleController:
     async def update_role_controller(self, request: Request):
         body = await request.json()
         try:
-            await self.role_service.update_role_data(body)
+            result = await self.role_service.update_role_data(body)
+            data = jsonable_encoder(result)
             return JSONResponse(status_code=200, content={
                 "success": True,
-                "message": "Successfully updated"
+                "message": "Successfully updated",
+                "data": data
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={

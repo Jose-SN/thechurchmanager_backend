@@ -13,13 +13,16 @@ def get_role_controller(role_service=Depends(get_role_service)):
 
 @role_router.get("/get")
 async def get_all_roles(role_controller: RoleController = Depends(get_role_controller),
-    _id: str = Query(None),
-    organization_id: str = Query(None)):
+    id: str = Query(None),
+    organization_id: str = Query(None),
+    team_id: str = Query(None)):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
+    if team_id:
+        filters["team_id"] = team_id
     return await role_controller.fetch_role_controller(filters)
 
 @role_router.post("/save")
