@@ -13,11 +13,11 @@ def get_plan_controller(plan_service=Depends(get_plan_service)):
 
 @plan_router.get("/get")
 async def get_all_plans(plan_controller: PlanController = Depends(get_plan_controller),
-    _id: str = Query(None),
+    id: str = Query(None),
     organization_id: str = Query(None)):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
     return await plan_controller.fetch_plan_controller(filters)

@@ -18,8 +18,8 @@ class TeamService:
 
     async def get_team_data(self, filters: dict = {}) -> List[dict]:
         async with self.db_pool.acquire() as conn:
-            if "_id" in filters or "id" in filters:
-                team_id = filters.get("_id") or filters.get("id")
+            if "id" in filters:
+                team_id = filters.get("id")
                 team = await conn.fetchrow(GET_TEAM_BY_ID_QUERY, team_id)
                 if team:
                     return [dict(team)]
@@ -42,7 +42,7 @@ class TeamService:
     async def save_bulk_team_data(self, teams_data: list[dict], organization_id: str) -> list[dict]:
         """
         Save or update multiple teams.
-        - Updates teams that already have id or _id.
+        - Updates teams that already have id.
         - Creates new teams that don't.
         Returns the full list of updated/created team documents.
         """
@@ -50,12 +50,12 @@ class TeamService:
         async with self.db_pool.acquire() as conn:
             async with conn.transaction():
                 for team in teams_data:
-                    team_id = team.get("id") or team.get("_id")
+                    team_id = team.get("id")
                     
                     if team_id:
                         # Update existing team
                         try:
-                            update_data = {k: v for k, v in team.items() if k not in ("_id", "id")}
+                            update_data = {k: v for k, v in team.items() if k not in ("id")}
                             name = update_data.get("name", "")
                             description = update_data.get("description", "")
                             org_id = update_data.get("organization_id", organization_id)
@@ -89,12 +89,12 @@ class TeamService:
         return updated_teams
 
     async def update_team_data(self, team_data: dict) -> dict:
-        team_id = team_data.get("_id") or team_data.get("id")
+        team_id = team_data.get("id")
         if not team_id:
             raise HTTPException(status_code=400, detail="Team ID is required")
         
         async with self.db_pool.acquire() as conn:
-            update_data = {k: v for k, v in team_data.items() if k not in ("_id", "id")}
+            update_data = {k: v for k, v in team_data.items() if k not in ("id")}
             name = update_data.get("name", "")
             description = update_data.get("description", "")
             organization_id = update_data.get("organization_id", "")

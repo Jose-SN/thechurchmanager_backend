@@ -19,16 +19,16 @@ class UserService:
         query = {}
         if filters:
             query = filters.copy()
-            if "_id" in query:
+            if "id" in query:
                 try:
-                    query["_id"] = ObjectId(query["_id"])
+                    query["id"] = ObjectId(query["id"])
                 except Exception:
                     # Invalid ObjectId, will return empty result
                     return []
         users = await self.users.find(query).to_list(length=None)
         for org in users:
-            if "_id" in org:
-                org["_id"] = str(org["_id"])
+            if "id" in org:
+                org["id"] = str(org["id"])
         return users
 
     async def save_user_data(self, user_data: dict):
@@ -37,7 +37,7 @@ class UserService:
         #     user_data["password"] = pwd_context.hash(user_data["password"])
 
             result = await self.users.insert_one(user_data)
-            user = await self.users.find_one({"_id": result.inserted_id})
+            user = await self.users.find_one({"id": result.inserted_id})
             if user:
                 user = dependencies.convert_objectid(user)
             else:
@@ -51,7 +51,7 @@ class UserService:
         """
         result = await self.users.insert_many(users_data)
         inserted_ids = result.inserted_ids
-        users = await self.users.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
+        users = await self.users.find({"id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
         return users
 
 
@@ -86,7 +86,7 @@ class UserService:
             "address": login_user.get("address"),
         })
         return {
-            "_id": str(login_user.get("_id")),
+            "id": str(login_user.get("id")),
             "first_name": login_user.get("first_name"),
             "last_name": login_user.get("last_name"),
             "organization_id": str(login_user.get("organization_id")),
@@ -107,11 +107,11 @@ class UserService:
 
     async def update_user_data(self, user_data: dict) -> dict:
         try:
-            user_id = user_data.get("_id")
+            user_id = user_data.get("id")
             update_fields = user_data.copy()
-            update_fields.pop("_id", None)
+            update_fields.pop("id", None)
             update_result = await self.users.find_one_and_update(
-                {"_id": dependencies.try_objectid(user_id)},
+                {"id": dependencies.try_objectid(user_id)},
                 {"$set": update_fields},
                 return_document=ReturnDocument.AFTER
             )
@@ -124,7 +124,7 @@ class UserService:
     async def delete_user_data(self, user_id: str) -> str:
         if not ObjectId.is_valid(user_id):
             raise HTTPException(status_code=400, detail="Invalid user ID")
-        result = await self.users.find_one_and_delete({"_id": str(user_id)})
+        result = await self.users.find_one_and_delete({"id": str(user_id)})
         return "" if result else "User not found"
 
 

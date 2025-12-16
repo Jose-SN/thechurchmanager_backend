@@ -19,16 +19,16 @@ class OrganizationService:
         query = {}
         if filters:
             query = filters.copy()
-            if "_id" in query:
+            if "id" in query:
                 try:
-                    query["_id"] = ObjectId(query["_id"])
+                    query["id"] = ObjectId(query["id"])
                 except Exception:
                     # Invalid ObjectId, will return empty result
                     return []
         organizations = await self.organizations.find(query).to_list(length=None)
         for org in organizations:
-            if "_id" in org:
-                org["_id"] = str(org["_id"])
+            if "id" in org:
+                org["id"] = str(org["id"])
         return organizations
 
     async def save_organization_data(self, organization_data: dict):
@@ -37,7 +37,7 @@ class OrganizationService:
         #     organization_data["password"] = pwd_context.hash(organization_data["password"])
 
             result = await self.organizations.insert_one(organization_data)
-            organization = await self.organizations.find_one({"_id": result.inserted_id})
+            organization = await self.organizations.find_one({"id": result.inserted_id})
             if organization:
                 organization = dependencies.convert_objectid(organization)
             else:
@@ -51,7 +51,7 @@ class OrganizationService:
         """
         result = await self.organizations.insert_many(organizations_data)
         inserted_ids = result.inserted_ids
-        organizations = await self.organizations.find({"_id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
+        organizations = await self.organizations.find({"id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
         return organizations
 
 
@@ -88,7 +88,7 @@ class OrganizationService:
             "officeHours": login_organization.get("contact", {}).get("officeHours"),
         }
         return {
-            "_id": str(login_organization.get("_id")),
+            "id": str(login_organization.get("id")),
             "name": login_organization.get("name"),
             "title": login_organization.get("title"),
             "members": login_organization.get("members"),
@@ -105,11 +105,11 @@ class OrganizationService:
 
     async def update_organization_data(self, organization_data: dict) -> dict:
         try:
-            organization_id = organization_data.get("_id")
+            organization_id = organization_data.get("id")
             update_fields = organization_data.copy()
-            update_fields.pop("_id", None)
+            update_fields.pop("id", None)
             update_result = await self.organizations.find_one_and_update(
-                {"_id": dependencies.try_objectid(organization_id)},
+                {"id": dependencies.try_objectid(organization_id)},
                 {"$set": update_fields},
                 return_document=ReturnDocument.AFTER
             )
@@ -122,7 +122,7 @@ class OrganizationService:
     async def delete_organization_data(self, organization_id: str) -> str:
         if not ObjectId.is_valid(organization_id):
             raise HTTPException(status_code=400, detail="Invalid organization ID")
-        result = await self.organizations.find_one_and_delete({"_id": str(organization_id)})
+        result = await self.organizations.find_one_and_delete({"id": str(organization_id)})
         return "" if result else "Organization not found"
 
 

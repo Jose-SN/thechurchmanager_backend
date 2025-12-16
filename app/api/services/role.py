@@ -20,8 +20,8 @@ class RoleService:
 
     async def get_role_data(self, filters: dict = {}) -> List[dict]:
         async with self.db_pool.acquire() as conn:
-            if "id" in filters or "_id" in filters:
-                role_id = filters.get("id") or filters.get("_id")
+            if "id" in filters:
+                role_id = filters.get("id")
                 role = await conn.fetchrow(GET_ROLE_BY_ID_QUERY, role_id)
                 if role:
                     return [dict(role)]
@@ -79,12 +79,12 @@ class RoleService:
         return rows
 
     async def update_role_data(self, role_data: dict) -> dict:
-        role_id = role_data.get("id") or role_data.get("_id")
+        role_id = role_data.get("id")
         if not role_id:
             raise HTTPException(status_code=400, detail="Role ID is required")
         
         async with self.db_pool.acquire() as conn:
-            update_data = {k: v for k, v in role_data.items() if k not in ("_id", "id")}
+            update_data = {k: v for k, v in role_data.items() if k not in ("id")}
             name = update_data.get("name", "")
             description = update_data.get("description", "")
             team_id = update_data.get("team_id")

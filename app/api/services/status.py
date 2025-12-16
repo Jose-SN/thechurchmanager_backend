@@ -23,13 +23,13 @@ class StatusService:
         pipeline = [
             {
                 "$group": {
-                    "_id": {
+                    "id": {
                         "parentId": "$parentId",
                         "parentType": "$parentType"
                     },
                     "statuses": {
                         "$push": {
-                            "_id": "$_id",
+                            "id": "id",
                             "percentage": "$percentage",
                             "comment": "$comment",
                             "rating": "$rating",
@@ -45,9 +45,9 @@ class StatusService:
             },
             {
                 "$project": {
-                    "_id": 0,
-                    "parentId": "$_id.parentId",
-                    "parentType": "$_id.parentType",
+                    "id": 0,
+                    "parentId": "id.parentId",
+                    "parentType": "id.parentType",
                     "statuses": 1,
                     "averageRating": 1,
                     "maxPercentage": 1

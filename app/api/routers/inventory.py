@@ -13,11 +13,11 @@ def get_inventory_controller(inventory_service=Depends(get_inventory_service)):
 
 @inventory_router.get("/get")
 async def get_all_inventorys(inventory_controller: InventoryController = Depends(get_inventory_controller),
-    _id: str = Query(None),
+    id: str = Query(None),
     organization_id: str = Query(None)):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
     return await inventory_controller.fetch_inventory_controller(filters)

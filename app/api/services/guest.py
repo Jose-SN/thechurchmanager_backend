@@ -11,7 +11,7 @@ class GuestService:
 
     async def get_guest_data(self, guest_id: Optional[str] = None) -> Union[List[GuestInDB], GuestInDB, None]:
         if guest_id:
-            data = await self.guest_collection.find_one({"_id": ObjectId(guest_id)})
+            data = await self.guest_collection.find_one({"id": ObjectId(guest_id)})
             return GuestInDB(**data) if data else None
         else:
             cursor = self.guest_collection.find()
@@ -29,22 +29,22 @@ class GuestService:
     async def save_guest_data(self, guest: GuestCreate) -> GuestInDB:
         doc = guest.dict(exclude_unset=True)
         result = await self.guest_collection.insert_one(doc)
-        doc["_id"] = result.inserted_id
+        doc["id"] = result.inserted_id
         return GuestInDB(**doc)
 
     async def update_guest_data(self, guest: GuestUpdate) -> Optional[GuestInDB]:
-        guest_id = guest.id or guest._id
+        guest_id = guest.id
         if not guest_id:
             return await self.save_guest_data(guest)
 
-        update_data = guest.dict(exclude_unset=True, exclude={"id", "_id"})
+        update_data = guest.dict(exclude_unset=True, exclude={"id"})
         updated = await self.guest_collection.find_one_and_update(
-            {"_id": ObjectId(guest_id)},
+            {"id": ObjectId(guest_id)},
             {"$set": update_data},
             return_document=True
         )
         return GuestInDB(**updated) if updated else None
 
     async def delete_guest_data(self, guest_id: str) -> str:
-        result = await self.guest_collection.find_one_and_delete({"_id": ObjectId(guest_id)})
+        result = await self.guest_collection.find_one_and_delete({"id": ObjectId(guest_id)})
         return "" if result else "Guest not found"

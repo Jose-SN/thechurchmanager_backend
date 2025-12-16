@@ -10,7 +10,7 @@ class MailTemplateService:
 
     async def get_mail_templates(self, mail_template_id: Optional[str] = None, submitted_by: Optional[str] = None) -> List[dict]:
         if mail_template_id:
-            result = await self.collection.find_one({"_id": ObjectId(mail_template_id)})
+            result = await self.collection.find_one({"id": ObjectId(mail_template_id)})
             if not result:
                 raise HTTPException(status_code=404, detail="Mail template not found")
             return result
@@ -22,12 +22,12 @@ class MailTemplateService:
 
     async def save_mail_template(self, data: MailTemplateCreate) -> dict:
         result = await self.collection.insert_one(data.dict())
-        new_template = await self.collection.find_one({"_id": result.inserted_id})
+        new_template = await self.collection.find_one({"id": result.inserted_id})
         return new_template
 
     async def update_mail_template(self, mail_template_id: str, data: MailTemplateCreate) -> dict:
         result = await self.collection.find_one_and_update(
-            {"_id": ObjectId(mail_template_id)},
+            {"id": ObjectId(mail_template_id)},
             {"$set": data.dict()},
             return_document=True
         )
@@ -36,7 +36,7 @@ class MailTemplateService:
         return result
 
     async def delete_mail_template(self, mail_template_id: str) -> dict:
-        result = await self.collection.find_one_and_delete({"_id": ObjectId(mail_template_id)})
+        result = await self.collection.find_one_and_delete({"id": ObjectId(mail_template_id)})
         if not result:
             raise HTTPException(status_code=404, detail="Mail template not found")
         return {"message": "Deleted successfully"}

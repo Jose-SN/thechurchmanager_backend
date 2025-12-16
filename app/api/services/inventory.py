@@ -17,8 +17,8 @@ class InventoryService:
 
     async def get_inventory_data(self, filters: dict = {}) -> List[dict]:
         async with self.db_pool.acquire() as conn:
-            if "_id" in filters or "id" in filters:
-                inventory_id = filters.get("_id") or filters.get("id")
+            if "id" in filters:
+                inventory_id = filters.get("id")
                 inventory = await conn.fetchrow(GET_INVENTORY_BY_ID_QUERY, inventory_id)
                 if inventory:
                     return [dict(inventory)]
@@ -52,12 +52,12 @@ class InventoryService:
         return rows
 
     async def update_inventory_data(self, inventory_data: dict) -> dict:
-        inventory_id = inventory_data.get("_id") or inventory_data.get("id")
+        inventory_id = inventory_data.get("id")
         if not inventory_id:
             raise HTTPException(status_code=400, detail="Inventory ID is required")
         
         async with self.db_pool.acquire() as conn:
-            update_data = {k: v for k, v in inventory_data.items() if k not in ("_id", "id")}
+            update_data = {k: v for k, v in inventory_data.items() if k not in ("id")}
             name = update_data.get("name", "")
             description = update_data.get("description", "")
             quantity = update_data.get("quantity", 0)

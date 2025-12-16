@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class OTPModel(BaseModel):
-    id: Optional[ObjectId] = Field(alias="_id")
+    id: Optional[ObjectId] = Field(alias="id")
     user_id: ObjectId
     otp: int
     expires_at: Optional[datetime] = None
@@ -24,7 +24,7 @@ class OtpService:
             "expires_at": datetime.utcnow() + timedelta(minutes=10),
         }
         result = await self.collection.insert_one(otp_data)
-        otp_data["_id"] = result.inserted_id
+        otp_data["id"] = result.inserted_id
         return OTPModel(**otp_data)
 
     async def get_otp(self, user_id: ObjectId, otp: Optional[int] = None) -> Optional[OTPModel]:
@@ -44,5 +44,5 @@ class OtpService:
         return update_result.modified_count == 1
 
     async def delete_otp(self, otp_id: ObjectId) -> str:
-        delete_result = await self.collection.find_one_and_delete({"_id": otp_id})
+        delete_result = await self.collection.find_one_and_delete({"id": otp_id})
         return "" if delete_result else "OTP not found"

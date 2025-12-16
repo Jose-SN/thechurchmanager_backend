@@ -10,7 +10,7 @@ class MeetingService:
 
     async def get_meeting_data(self, meeting_id: Optional[str] = None, submitted_by: Optional[str] = None) ->   Union[dict, List[dict], None]:
         if meeting_id:
-            data = await self.collection.find_one({"_id": ObjectId(meeting_id)})
+            data = await self.collection.find_one({"id": ObjectId(meeting_id)})
             return data if data else None
         elif submitted_by:
             cursor = self.collection.find({"submittedBy": ObjectId(submitted_by)})
@@ -24,23 +24,23 @@ class MeetingService:
     async def save_meeting_data(self, meeting) -> dict:
         doc = meeting.dict(exclude_unset=True)
         result = await self.collection.insert_one(doc)
-        doc["_id"] = result.inserted_id
+        doc["id"] = result.inserted_id
         return doc
 
     async def update_meeting_data(self, meeting) -> Optional[dict]:
-        meeting_id = meeting.id or meeting._id
+        meeting_id = meeting.id
         if not meeting_id:
             # If no id, treat as new document
             return await self.save_meeting_data(meeting)
 
-        update_data = meeting.dict(exclude_unset=True, exclude={"id", "_id"})
+        update_data = meeting.dict(exclude_unset=True, exclude={"id"})
         updated = await self.collection.find_one_and_update(
-            {"_id": dependencies.try_objectid(meeting_id)},
+            {"id": dependencies.try_objectid(meeting_id)},
             {"$set": update_data},
             return_document=True
         )
         return updated if updated else None
 
     async def delete_meeting_data(self, meeting_id: str) -> str:
-        result = await self.collection.find_one_and_delete({"_id": dependencies.try_objectid(meeting_id)})
+        result = await self.collection.find_one_and_delete({"id": dependencies.try_objectid(meeting_id)})
         return "" if result else "Meeting not found"

@@ -14,12 +14,12 @@ def get_user_controller(user_service=Depends(get_user_service)):
 @user_router.get("/get")
 async def get_all_users(
     user_controller: UserController = Depends(get_user_controller),
-    _id: str = Query(None),
+    id: str = Query(None),
     organization_id: str = Query(None)
 ):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
     return await user_controller.fetch_user_controller(filters)

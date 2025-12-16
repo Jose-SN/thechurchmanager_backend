@@ -21,9 +21,9 @@ class PyObjectId(ObjectId):
         schema.update(type="string")
         return schema
 
-# Base user schema with MongoDB _id
+# Base user schema with MongoDB id
 class IUserSchema(BaseModel):
-    id: PyObjectId = Field(..., alias="_id")
+    id: PyObjectId = Field(..., alias="id")
     first_name: str
     last_name: Optional[str]
     profile_image: Optional[str]

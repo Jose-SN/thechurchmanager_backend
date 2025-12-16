@@ -17,8 +17,8 @@ class PlanService:
 
     async def get_plan_data(self, filters: dict = {}) -> List[dict]:
         async with self.db_pool.acquire() as conn:
-            if "_id" in filters or "id" in filters:
-                plan_id = filters.get("_id") or filters.get("id")
+            if "id" in filters:
+                plan_id = filters.get("id")
                 plan = await conn.fetchrow(GET_PLAN_BY_ID_QUERY, plan_id)
                 if plan:
                     return [dict(plan)]
@@ -50,12 +50,12 @@ class PlanService:
         return rows
 
     async def update_plan_data(self, plan_data: dict) -> dict:
-        plan_id = plan_data.get("_id") or plan_data.get("id")
+        plan_id = plan_data.get("id")
         if not plan_id:
             raise HTTPException(status_code=400, detail="Plan ID is required")
         
         async with self.db_pool.acquire() as conn:
-            update_data = {k: v for k, v in plan_data.items() if k not in ("_id", "id")}
+            update_data = {k: v for k, v in plan_data.items() if k not in ("id")}
             name = update_data.get("name", "")
             description = update_data.get("description", "")
             

@@ -14,11 +14,11 @@ def get_organization_controller(organization_service=Depends(get_organization_se
 @organization_router.get("/get")
 async def get_all_organizations(
     organization_controller: OrganizationController = Depends(get_organization_controller),
-    _id: str = Query(None),
+    id: str = Query(None),
     organization_id: str = Query(None)):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
     return await organization_controller.fetch_organization_controller(filters)

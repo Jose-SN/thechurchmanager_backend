@@ -16,8 +16,8 @@ class TeacherService:
 
     async def get_teacher_data(self, filters: dict = {}) -> List[dict]:
         async with self.db_pool.acquire() as conn:
-            if "_id" in filters:
-                teacher = await conn.fetchrow(GET_TEACHER_BY_ID_QUERY, filters["_id"])
+            if "id" in filters:
+                teacher = await conn.fetchrow(GET_TEACHER_BY_ID_QUERY, filters["id"])
                 if teacher:
                     return [dict(teacher)]
                 return []
@@ -39,7 +39,7 @@ class TeacherService:
             return rows
 
     async def update_teacher_data(self, teacher_data: dict) -> dict:
-        teacher_id = teacher_data.get("id") or teacher_data.get("_id")
+        teacher_id = teacher_data.get("id")
         if not teacher_id:
             raise HTTPException(status_code=400, detail="Teacher ID is required")
         async with self.db_pool.acquire() as conn:

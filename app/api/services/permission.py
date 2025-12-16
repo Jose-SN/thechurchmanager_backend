@@ -22,8 +22,8 @@ class PermissionService:
 
     async def get_permission_data(self, filters: dict = {}) -> List[dict]:
         async with self.db_pool.acquire() as conn:
-            if "id" in filters or "_id" in filters:
-                permission_id = filters.get("id") or filters.get("_id")
+            if "id" in filters:
+                permission_id = filters.get("id")
                 permission = await conn.fetchrow(GET_PERMISSION_BY_ID_QUERY, permission_id)
                 if permission:
                     return [dict(permission)]
@@ -65,7 +65,7 @@ class PermissionService:
     async def save_bulk_permission_data(self, permissions_data: list[dict], organization_id: str) -> list[dict]:
         """
         Save or update multiple permissions.
-        - Updates permissions that already have id or _id.
+        - Updates permissions that already have id.
         - Creates new permissions that don't.
         Returns the full list of updated/created permission documents.
         """
@@ -73,12 +73,12 @@ class PermissionService:
         async with self.db_pool.acquire() as conn:
             async with conn.transaction():
                 for permission in permissions_data:
-                    permission_id = permission.get("id") or permission.get("_id")
+                    permission_id = permission.get("id")
                     
                     if permission_id:
                         # Update existing permission
                         try:
-                            update_data = {k: v for k, v in permission.items() if k not in ("_id", "id")}
+                            update_data = {k: v for k, v in permission.items() if k not in ("id")}
                             org_id = update_data.get("organization_id", organization_id)
                             role_id = update_data.get("role_id")
                             module_id = update_data.get("module_id")
@@ -145,12 +145,12 @@ class PermissionService:
         return updated_permissions
 
     async def update_permission_data(self, permission_data: dict) -> dict:
-        permission_id = permission_data.get("id") or permission_data.get("_id")
+        permission_id = permission_data.get("id")
         if not permission_id:
             raise HTTPException(status_code=400, detail="Permission ID is required")
         
         async with self.db_pool.acquire() as conn:
-            update_data = {k: v for k, v in permission_data.items() if k not in ("_id", "id")}
+            update_data = {k: v for k, v in permission_data.items() if k not in ("id")}
             organization_id = update_data.get("organization_id", "")
             role_id = update_data.get("role_id")
             module_id = update_data.get("module_id")

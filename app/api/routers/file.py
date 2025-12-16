@@ -13,10 +13,10 @@ def get_file_controller(file_service=Depends(get_file_service)):
 
 @file_router.get("/get")
 async def get_all_files(file_controller: FileController = Depends(get_file_controller),
-    _id: str = Query(None)):
+    id: str = Query(None)):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     return await file_controller.fetch_file_controller(filters)
 
 @file_router.post("/save")

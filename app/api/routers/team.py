@@ -13,11 +13,11 @@ def get_team_controller(team_service=Depends(get_team_service)):
 
 @team_router.get("/get")
 async def get_all_teams(team_controller: TeamController = Depends(get_team_controller),
-    _id: str = Query(None),
+    id: str = Query(None),
     organization_id: str = Query(None)):
     filters = {}
-    if _id:
-        filters["_id"] = _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
     return await team_controller.fetch_team_controller(filters)

@@ -18,8 +18,8 @@ class ModuleService:
 
     async def get_module_data(self, filters: dict = {}) -> List[dict]:
         async with self.db_pool.acquire() as conn:
-            if "id" in filters or "_id" in filters:
-                module_id = filters.get("id") or filters.get("_id")
+            if "id" in filters:
+                module_id = filters.get("id")
                 module = await conn.fetchrow(GET_MODULE_BY_ID_QUERY, module_id)
                 if module:
                     return [dict(module)]
@@ -58,12 +58,12 @@ class ModuleService:
         return rows
 
     async def update_module_data(self, module_data: dict) -> dict:
-        module_id = module_data.get("id") or module_data.get("_id")
+        module_id = module_data.get("id")
         if not module_id:
             raise HTTPException(status_code=400, detail="Module ID is required")
         
         async with self.db_pool.acquire() as conn:
-            update_data = {k: v for k, v in module_data.items() if k not in ("_id", "id")}
+            update_data = {k: v for k, v in module_data.items() if k not in ("id")}
             name = update_data.get("name", "")
             description = update_data.get("description", "")
             organization_id = update_data.get("organization_id", "")
