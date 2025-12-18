@@ -241,7 +241,7 @@ class UserService:
     #         user_data["password"] = pwd_context.hash(user_data["password"])
 
     #     update_result = await self.users.find_one_and_update(
-    #         {"_id": ObjectId(user_id)},
+    #         {"id": ObjectId(user_id)},
     #         {"$set": user_data},
     #         return_document=True  # Returns updated document
     #     )
@@ -253,7 +253,7 @@ class UserService:
     # async def delete_user_data(self, user_id: str) -> str:
     #     if not ObjectId.is_valid(user_id):
     #         raise ValueError("Invalid user ID")
-    #     result = await self.users.find_one_and_delete({"_id": ObjectId(user_id)})
+    #     result = await self.users.find_one_and_delete({"id": ObjectId(user_id)})
     #     return "" if result else "User not found"
 
     # async def fetch_user_from_email(self, email: str) -> Optional[dict]:
