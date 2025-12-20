@@ -23,21 +23,21 @@ SELECT * FROM permissions WHERE team_id = $1
 """
 
 INSERT_PERMISSION_QUERY = """
-INSERT INTO permissions (organization_id, role_id, module_id, team_id, permissions, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+INSERT INTO permissions (organization_id, role_id, module_id, team_id, view, edit, create, delete, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 RETURNING *
 """
 
 INSERT_BULK_PERMISSIONS_QUERY = """
-INSERT INTO permissions (organization_id, role_id, module_id, team_id, permissions, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+INSERT INTO permissions (organization_id, role_id, module_id, team_id, view, edit, create, delete, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 RETURNING *
 """
 
 UPDATE_PERMISSION_QUERY = """
 UPDATE permissions
-SET organization_id = $1, role_id = $2, module_id = $3, team_id = $4, permissions = $5, updated_at = NOW()
-WHERE id = $6
+SET organization_id = $1, role_id = $2, module_id = $3, team_id = $4, view = $5, edit = $6, create = $7, delete = $8, updated_at = NOW()
+WHERE id = $9
 RETURNING *
 """
 

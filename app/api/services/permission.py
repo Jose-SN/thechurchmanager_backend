@@ -1,7 +1,6 @@
 from typing import List
 from fastapi import HTTPException
 import asyncpg
-import json
 
 from app.queries.permission import (
     GET_PERMISSIONS_QUERY,
@@ -43,6 +42,14 @@ class PermissionService:
             rows = await conn.fetch(GET_PERMISSIONS_QUERY)
             return [dict(row) for row in rows]
 
+    def _extract_permission_flags(self, data: dict) -> tuple:
+        """Extract view, edit, create, delete flags from data (supports both old and new formats)"""
+            view = data.get("view", False) or data.get("View", False)
+            edit = data.get("edit", False) or data.get("Edit", False)
+            create = data.get("create", False) or data.get("Create", False)
+            delete = data.get("delete", False) or data.get("Delete", False)
+        return (view, edit, create, delete)
+
     async def save_permission_data(self, permission_data: dict) -> dict:
         async with self.db_pool.acquire() as conn:
             # Extract values in the correct order for INSERT_PERMISSION_QUERY
@@ -50,17 +57,19 @@ class PermissionService:
             role_id = permission_data.get("role_id")
             module_id = permission_data.get("module_id")
             team_id = permission_data.get("team_id")
-            # Convert permissions object to JSON string for JSONB column
-            permissions_obj = permission_data.get("permissions", {})
-            if isinstance(permissions_obj, dict):
-                permissions = json.dumps(permissions_obj)
-            elif permissions_obj is None:
-                permissions = json.dumps({})
-            else:
-                permissions = json.dumps(permissions_obj)
+            # Extract boolean values - support both old format (permissions object) and new format (direct fields)
+            view, edit, create, delete = self._extract_permission_flags(permission_data)
             
-            row = await conn.fetchrow(INSERT_PERMISSION_QUERY, organization_id, role_id, module_id, team_id, permissions)
+            row = await conn.fetchrow(INSERT_PERMISSION_QUERY, organization_id, role_id, module_id, team_id, view, edit, create, delete)
             return dict(row) if row else {}
+
+    def _extract_permission_flags(self, data: dict) -> tuple:
+        """Extract view, edit, create, delete flags from data (supports both old and new formats)"""
+            view = data.get("view", False) or data.get("View", False)
+            edit = data.get("edit", False) or data.get("Edit", False)
+            create = data.get("create", False) or data.get("Create", False)
+            delete = data.get("delete", False) or data.get("Delete", False)
+        return (view, edit, create, delete)
 
     async def save_bulk_permission_data(self, permissions_data: list[dict], organization_id: str) -> list[dict]:
         """
@@ -83,16 +92,9 @@ class PermissionService:
                             role_id = update_data.get("role_id")
                             module_id = update_data.get("module_id")
                             team_id = update_data.get("team_id")
-                            # Convert permissions object to JSON string
-                            permissions_obj = update_data.get("permissions", {})
-                            if isinstance(permissions_obj, dict):
-                                permissions = json.dumps(permissions_obj)
-                            elif permissions_obj is None:
-                                permissions = json.dumps({})
-                            else:
-                                permissions = json.dumps(permissions_obj)
+                            view, edit, create, delete = self._extract_permission_flags(update_data)
                             
-                            row = await conn.fetchrow(UPDATE_PERMISSION_QUERY, org_id, role_id, module_id, team_id, permissions, permission_id)
+                            row = await conn.fetchrow(UPDATE_PERMISSION_QUERY, org_id, role_id, module_id, team_id, view, edit, create, delete, permission_id)
                             if row:
                                 updated_permissions.append(dict(row))
                             else:
@@ -101,13 +103,9 @@ class PermissionService:
                                 role_id = permission.get("role_id")
                                 module_id = permission.get("module_id")
                                 team_id = permission.get("team_id")
-                                permissions_obj = permission.get("permissions", {})
-                                if isinstance(permissions_obj, dict):
-                                    permissions = json.dumps(permissions_obj)
-                                else:
-                                    permissions = json.dumps({})
+                                view, edit, create, delete = self._extract_permission_flags(permission)
                                 
-                                row = await conn.fetchrow(INSERT_PERMISSION_QUERY, org_id, role_id, module_id, team_id, permissions)
+                                row = await conn.fetchrow(INSERT_PERMISSION_QUERY, org_id, role_id, module_id, team_id, view, edit, create, delete)
                                 if row:
                                     updated_permissions.append(dict(row))
                         except Exception as e:
@@ -117,13 +115,9 @@ class PermissionService:
                             role_id = permission.get("role_id")
                             module_id = permission.get("module_id")
                             team_id = permission.get("team_id")
-                            permissions_obj = permission.get("permissions", {})
-                            if isinstance(permissions_obj, dict):
-                                permissions = json.dumps(permissions_obj)
-                            else:
-                                permissions = json.dumps({})
+                            view, edit, create, delete = self._extract_permission_flags(permission)
                             
-                            row = await conn.fetchrow(INSERT_PERMISSION_QUERY, org_id, role_id, module_id, team_id, permissions)
+                            row = await conn.fetchrow(INSERT_PERMISSION_QUERY, org_id, role_id, module_id, team_id, view, edit, create, delete)
                             if row:
                                 updated_permissions.append(dict(row))
                     else:
@@ -132,13 +126,9 @@ class PermissionService:
                         role_id = permission.get("role_id")
                         module_id = permission.get("module_id")
                         team_id = permission.get("team_id")
-                        permissions_obj = permission.get("permissions", {})
-                        if isinstance(permissions_obj, dict):
-                            permissions = json.dumps(permissions_obj)
-                        else:
-                            permissions = json.dumps({})
+                        view, edit, create, delete = self._extract_permission_flags(permission)
                         
-                        row = await conn.fetchrow(INSERT_PERMISSION_QUERY, org_id, role_id, module_id, team_id, permissions)
+                        row = await conn.fetchrow(INSERT_PERMISSION_QUERY, org_id, role_id, module_id, team_id, view, edit, create, delete)
                         if row:
                             updated_permissions.append(dict(row))
         
@@ -155,16 +145,10 @@ class PermissionService:
             role_id = update_data.get("role_id")
             module_id = update_data.get("module_id")
             team_id = update_data.get("team_id")
-            # Convert permissions object to JSON string
-            permissions_obj = update_data.get("permissions", {})
-            if isinstance(permissions_obj, dict):
-                permissions = json.dumps(permissions_obj)
-            elif permissions_obj is None:
-                permissions = json.dumps({})
-            else:
-                permissions = json.dumps(permissions_obj)
+            # Extract boolean values - support both old format (permissions object) and new format (direct fields)
+            view, edit, create, delete = self._extract_permission_flags(update_data)
             
-            row = await conn.fetchrow(UPDATE_PERMISSION_QUERY, organization_id, role_id, module_id, team_id, permissions, permission_id)
+            row = await conn.fetchrow(UPDATE_PERMISSION_QUERY, organization_id, role_id, module_id, team_id, view, edit, create, delete, permission_id)
             if not row:
                 raise ValueError("Permission not found")
             return dict(row)

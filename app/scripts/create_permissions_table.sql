@@ -5,7 +5,10 @@ CREATE TABLE IF NOT EXISTS permissions (
     role_id UUID,
     module_id UUID,
     team_id UUID,
-    permissions JSONB DEFAULT '{}'::jsonb,
+    view BOOLEAN DEFAULT FALSE,
+    edit BOOLEAN DEFAULT FALSE,
+    create BOOLEAN DEFAULT FALSE,
+    delete BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
