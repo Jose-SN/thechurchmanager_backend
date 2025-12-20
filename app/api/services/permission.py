@@ -44,10 +44,10 @@ class PermissionService:
 
     def _extract_permission_flags(self, data: dict) -> tuple:
         """Extract view, edit, create, delete flags from data (supports both old and new formats)"""
-            view = data.get("view", False) or data.get("View", False)
-            edit = data.get("edit", False) or data.get("Edit", False)
-            create = data.get("create", False) or data.get("Create", False)
-            delete = data.get("delete", False) or data.get("Delete", False)
+        view = data.get("view", False) or data.get("View", False)
+        edit = data.get("edit", False) or data.get("Edit", False)
+        create = data.get("create", False) or data.get("Create", False)
+        delete = data.get("delete", False) or data.get("Delete", False)
         return (view, edit, create, delete)
 
     async def save_permission_data(self, permission_data: dict) -> dict:
@@ -65,10 +65,10 @@ class PermissionService:
 
     def _extract_permission_flags(self, data: dict) -> tuple:
         """Extract view, edit, create, delete flags from data (supports both old and new formats)"""
-            view = data.get("view", False) or data.get("View", False)
-            edit = data.get("edit", False) or data.get("Edit", False)
-            create = data.get("create", False) or data.get("Create", False)
-            delete = data.get("delete", False) or data.get("Delete", False)
+        view = data.get("view", False) or data.get("View", False)
+        edit = data.get("edit", False) or data.get("Edit", False)
+        create = data.get("create", False) or data.get("Create", False)
+        delete = data.get("delete", False) or data.get("Delete", False)
         return (view, edit, create, delete)
 
     async def save_bulk_permission_data(self, permissions_data: list[dict], organization_id: str) -> list[dict]:
