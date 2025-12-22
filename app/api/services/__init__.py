@@ -8,6 +8,7 @@ from .inventory import InventoryService
 from .plan import PlanService
 from .permission import PermissionService
 from .file import FileService
+from .user_role import UserRoleService
 
 __all__ = [
     "UserService", 
@@ -20,4 +21,5 @@ __all__ = [
     "PlanService",
     "PermissionService",
     "FileService",
+    "UserRoleService",
 ]

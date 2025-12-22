@@ -8,6 +8,7 @@ from .inventory import InventoryController
 from .plan import PlanController
 from .permission import PermissionController
 from .file import FileController
+from .user_role import UserRoleController
 
 __all__ = [
     "UserController", 
@@ -20,4 +21,5 @@ __all__ = [
     "PlanController",
     "PermissionController",
     "FileController",
+    "UserRoleController",
     ]
