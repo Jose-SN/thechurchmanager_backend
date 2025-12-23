@@ -10,6 +10,13 @@ from app.queries.user_role import (
     GET_USER_ROLES_BY_USER_AND_ORGANIZATION_QUERY,
     GET_USER_ROLES_BY_ROLE_QUERY,
     GET_USER_ROLES_BY_TEAM_QUERY,
+    GET_USER_ROLES_OVERVIEW_QUERY,
+    GET_USER_ROLE_OVERVIEW_BY_ID_QUERY,
+    GET_USER_ROLES_OVERVIEW_BY_ORGANIZATION_QUERY,
+    GET_USER_ROLES_OVERVIEW_BY_USER_QUERY,
+    GET_USER_ROLES_OVERVIEW_BY_USER_AND_ORGANIZATION_QUERY,
+    GET_USER_ROLES_OVERVIEW_BY_ROLE_QUERY,
+    GET_USER_ROLES_OVERVIEW_BY_TEAM_QUERY,
     INSERT_USER_ROLE_QUERY,
     INSERT_BULK_USER_ROLES_QUERY,
     UPDATE_USER_ROLE_QUERY,
@@ -176,5 +183,39 @@ class UserRoleService:
                     return [dict(row) for row in final_rows]
         except Exception as e:
             print(f"❌ Error syncing user roles: {e}")
+            raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+
+    async def get_user_role_overview_data(self, filters: dict = {}) -> List[dict]:
+        """
+        Get user roles with merged role details (name, description, type, permissions, etc.)
+        """
+        try:
+            async with self.db_pool.acquire() as conn:
+                if "id" in filters or "_id" in filters:
+                    user_role_id = filters.get("id") or filters.get("_id")
+                    user_role = await conn.fetchrow(GET_USER_ROLE_OVERVIEW_BY_ID_QUERY, user_role_id)
+                    if user_role:
+                        return [dict(user_role)]
+                    return []
+                elif "user_id" in filters and "organization_id" in filters:
+                    # Both user_id and organization_id provided - use combined query
+                    rows = await conn.fetch(GET_USER_ROLES_OVERVIEW_BY_USER_AND_ORGANIZATION_QUERY, filters["user_id"], filters["organization_id"])
+                    return [dict(row) for row in rows]
+                elif "organization_id" in filters:
+                    rows = await conn.fetch(GET_USER_ROLES_OVERVIEW_BY_ORGANIZATION_QUERY, filters["organization_id"])
+                    return [dict(row) for row in rows]
+                elif "user_id" in filters:
+                    rows = await conn.fetch(GET_USER_ROLES_OVERVIEW_BY_USER_QUERY, filters["user_id"])
+                    return [dict(row) for row in rows]
+                elif "role_id" in filters:
+                    rows = await conn.fetch(GET_USER_ROLES_OVERVIEW_BY_ROLE_QUERY, filters["role_id"])
+                    return [dict(row) for row in rows]
+                elif "team_id" in filters:
+                    rows = await conn.fetch(GET_USER_ROLES_OVERVIEW_BY_TEAM_QUERY, filters["team_id"])
+                    return [dict(row) for row in rows]
+                rows = await conn.fetch(GET_USER_ROLES_OVERVIEW_QUERY)
+                return [dict(row) for row in rows]
+        except Exception as e:
+            print(f"❌ Error fetching user role overview data: {e}")
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 

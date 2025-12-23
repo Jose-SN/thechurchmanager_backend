@@ -120,3 +120,18 @@ class UserRoleController:
                 "error": str(err)
             })
 
+    async def fetch_user_role_overview_controller(self, filters: dict = {}):
+        try:
+            user_roles = await self.user_role_service.get_user_role_overview_data(filters)
+            data = jsonable_encoder(user_roles)
+            return JSONResponse(status_code=200, content={
+                "success": True,
+                "data": data
+            })
+        except Exception as err:
+            return JSONResponse(status_code=400, content={
+                "success": False,
+                "message": "Failed to retrieve user role overview data",
+                "error": str(err)
+            })
+
