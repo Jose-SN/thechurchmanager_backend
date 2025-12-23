@@ -14,12 +14,13 @@ def get_user_role_controller(user_role_service=Depends(get_user_role_service)):
 
 @user_role_router.get("/get")
 async def get_all_user_roles(user_role_controller: UserRoleController = Depends(get_user_role_controller),
-    id: str = Query(None),
-    _id: str = Query(None),
-    organization_id: str = Query(None),
-    user_id: str = Query(None),
-    role_id: str = Query(None),
-    team_id: str = Query(None)):
+    id: Optional[str] = Query(None),
+    _id: Optional[str] = Query(None),
+    organization_id: Optional[str] = Query(None),
+    user_id: Optional[str] = Query(None),
+    role_id: Optional[str] = Query(None),
+    role_ids: Optional[List[str]] = Query(None),
+    team_id: Optional[str] = Query(None)):
     filters = {}
     if id or _id:
         filters["id"] = id or _id
@@ -27,7 +28,9 @@ async def get_all_user_roles(user_role_controller: UserRoleController = Depends(
         filters["organization_id"] = organization_id
     if user_id:
         filters["user_id"] = user_id
-    if role_id:
+    if role_ids:
+        filters["role_ids"] = role_ids
+    elif role_id:
         filters["role_id"] = role_id
     if team_id:
         filters["team_id"] = team_id

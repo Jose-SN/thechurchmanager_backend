@@ -9,6 +9,8 @@ from app.queries.user_role import (
     GET_USER_ROLES_BY_USER_QUERY,
     GET_USER_ROLES_BY_USER_AND_ORGANIZATION_QUERY,
     GET_USER_ROLES_BY_ROLE_QUERY,
+    GET_USER_ROLES_BY_ROLE_IDS_QUERY,
+    GET_USER_ROLES_BY_ORGANIZATION_AND_ROLE_IDS_QUERY,
     GET_USER_ROLES_BY_TEAM_QUERY,
     GET_USER_ROLES_OVERVIEW_QUERY,
     GET_USER_ROLE_OVERVIEW_BY_ID_QUERY,
@@ -41,12 +43,32 @@ class UserRoleService:
                     # Both user_id and organization_id provided - use combined query
                     rows = await conn.fetch(GET_USER_ROLES_BY_USER_AND_ORGANIZATION_QUERY, filters["user_id"], filters["organization_id"])
                     return [dict(row) for row in rows]
+                elif "organization_id" in filters and "role_ids" in filters:
+                    # Both organization_id and role_ids provided - use combined query
+                    role_ids = filters["role_ids"]
+                    if isinstance(role_ids, str):
+                        # Handle comma-separated string
+                        role_ids = [r.strip() for r in role_ids.split(",") if r.strip()]
+                    if role_ids:
+                        rows = await conn.fetch(GET_USER_ROLES_BY_ORGANIZATION_AND_ROLE_IDS_QUERY, filters["organization_id"], role_ids)
+                        return [dict(row) for row in rows]
+                    return []
                 elif "organization_id" in filters:
                     rows = await conn.fetch(GET_USER_ROLES_BY_ORGANIZATION_QUERY, filters["organization_id"])
                     return [dict(row) for row in rows]
                 elif "user_id" in filters:
                     rows = await conn.fetch(GET_USER_ROLES_BY_USER_QUERY, filters["user_id"])
                     return [dict(row) for row in rows]
+                elif "role_ids" in filters:
+                    # Multiple role_ids provided - use array query
+                    role_ids = filters["role_ids"]
+                    if isinstance(role_ids, str):
+                        # Handle comma-separated string
+                        role_ids = [r.strip() for r in role_ids.split(",") if r.strip()]
+                    if role_ids:
+                        rows = await conn.fetch(GET_USER_ROLES_BY_ROLE_IDS_QUERY, role_ids)
+                        return [dict(row) for row in rows]
+                    return []
                 elif "role_id" in filters:
                     rows = await conn.fetch(GET_USER_ROLES_BY_ROLE_QUERY, filters["role_id"])
                     return [dict(row) for row in rows]

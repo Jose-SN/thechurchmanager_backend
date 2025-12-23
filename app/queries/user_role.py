@@ -26,6 +26,14 @@ GET_USER_ROLES_BY_USER_AND_ORGANIZATION_QUERY = """
 SELECT * FROM user_roles WHERE user_id = $1 AND organization_id = $2
 """
 
+GET_USER_ROLES_BY_ROLE_IDS_QUERY = """
+SELECT * FROM user_roles WHERE role_id = ANY($1::uuid[])
+"""
+
+GET_USER_ROLES_BY_ORGANIZATION_AND_ROLE_IDS_QUERY = """
+SELECT * FROM user_roles WHERE organization_id = $1 AND role_id = ANY($2::uuid[])
+"""
+
 INSERT_USER_ROLE_QUERY = """
 INSERT INTO user_roles (organization_id, user_id, role_id, team_id, created_at, updated_at)
 VALUES ($1, $2, $3, $4, NOW(), NOW())
