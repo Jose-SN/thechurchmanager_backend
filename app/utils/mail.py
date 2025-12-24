@@ -15,6 +15,7 @@ if not EMAIL or not PASSWORD:
 
 async def send_gmail(to: str, subject: str, body: str) -> dict:
     """Send a simple text email via Gmail SMTP asynchronously."""
+    import asyncio
     try:
         msg = EmailMessage()
         msg["From"] = EMAIL
@@ -22,13 +23,18 @@ async def send_gmail(to: str, subject: str, body: str) -> dict:
         msg["Subject"] = subject
         msg.set_content(body)
 
-        # Use SSL for Gmail
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(str(EMAIL), str(PASSWORD))
-            smtp.send_message(msg)
+        # Run SMTP operations in executor to avoid blocking
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _send_sync, msg)
         return {"message": "Email sent successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+def _send_sync(msg: EmailMessage):
+    """Synchronous email sending function to be run in executor"""
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(str(EMAIL), str(PASSWORD))
+        smtp.send_message(msg)
 
 if __name__ == "__main__":
     # send_gmail("recipient@example.com", "Test Email", "Hello! This is a test email sent from Python.")

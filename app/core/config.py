@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     JWT_EXPIRY: str = Field(default='30d', validation_alias='JWT_EXPIRY')
     GMAIL_USERNAME: str = Field(default='', validation_alias='GMAIL_USERNAME')
     GMAIL_PASS: str = Field(default='', validation_alias='GMAIL_PASS')
+    THE_CHURCH_MANAGER_APP: str = Field(default='', validation_alias='THE_CHURCH_MANAGER_APP')
     
     # PostgreSQL settings
     POSTGRESQL_DB_HOST: str = Field(default='localhost', validation_alias='POSTGRESQL_DB_HOST')
