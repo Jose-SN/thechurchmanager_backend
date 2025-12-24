@@ -9,6 +9,7 @@ from .plan import PlanService
 from .permission import PermissionService
 from .file import FileService
 from .user_role import UserRoleService
+from .mail import MailTemplateService
 
 __all__ = [
     "UserService", 
@@ -22,4 +23,5 @@ __all__ = [
     "PermissionService",
     "FileService",
     "UserRoleService",
+    "MailTemplateService",
 ]

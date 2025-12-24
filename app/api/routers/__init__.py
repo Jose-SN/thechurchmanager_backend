@@ -14,6 +14,7 @@ from .plan import plan_router
 from .permission import permission_router
 from .file import file_router
 from .user_role import user_role_router
+from .mail import mail_template_router
 from .health import router as health_router  # rename the file if needed
 
 router = APIRouter()
@@ -30,5 +31,6 @@ router.include_router(inventory_router, prefix="/inventory")
 router.include_router(permission_router, prefix="/permission")
 router.include_router(file_router, prefix="/file")
 router.include_router(user_role_router, prefix="/user-role")
+router.include_router(mail_template_router, prefix="/mail")
 router.include_router(root_router)
 

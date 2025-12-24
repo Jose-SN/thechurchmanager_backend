@@ -9,6 +9,7 @@ from .plan import PlanController
 from .permission import PermissionController
 from .file import FileController
 from .user_role import UserRoleController
+from .mail import MailTemplateController
 
 __all__ = [
     "UserController", 
@@ -22,4 +23,5 @@ __all__ = [
     "PermissionController",
     "FileController",
     "UserRoleController",
+    "MailTemplateController",
     ]
