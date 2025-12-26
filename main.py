@@ -10,6 +10,7 @@ from app.db.mongodb import connect_db
 from app.db.postgresql import get_connection
 from app.api.routers import router  # Assuming routers/__init__.py
 from app.api.websocket import websocket_endpoint
+from app.utils.mail import test_smtp_connection
 
 app = FastAPI(title="The Church Manager")
 
@@ -51,6 +52,12 @@ app.mount("/public", StaticFiles(directory="public"), name="public")
 @app.on_event("startup")
 async def startup_event():
     app.state.db = await get_connection()
+    # Test Gmail SMTP connection at startup (non-blocking - app will start even if this fails)
+    try:
+        test_smtp_connection()
+    except Exception as e:
+        logging.warning(f"⚠️ Gmail SMTP test failed, but continuing startup: {e}")
+        print(f"⚠️ Gmail SMTP test failed, but continuing startup: {e}")
 
 app.include_router(router)
 
