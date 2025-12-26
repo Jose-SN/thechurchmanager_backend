@@ -215,14 +215,14 @@ class MailTemplateService:
                 
                 try:
                     # Prepare variables for replacement
+                    organization_name = user.get("organization", {}).get("name", "");
                     variables = {
                         "email": user_email,
                         "phone": user_phone or "",
-                        "name": user.get("name", "") or (user.get("first_name", "") + " " + user.get("last_name", "")).strip(),
                         "first_name": user.get("first_name", ""),
                         "last_name": user.get("last_name", ""),
-                        "organization_name": user.get("organization_name", ""),
-                        "reset_link": settings.THE_CHURCH_MANAGER_APP+"/pages/authentication/forgotpassword/",
+                        "organization_name": organization_name,
+                        "reset_link": (extra_variables.get("reset_link", "") if extra_variables else "") or (settings.THE_CHURCH_MANAGER_APP)+"/pages/authentication/forgotpassword/",
                     }
                     
                     # Add extra variables if provided (like reset_link, organization_name, etc.)
