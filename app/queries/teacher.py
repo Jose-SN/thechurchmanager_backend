@@ -6,16 +6,20 @@ GET_TEACHER_BY_ID_QUERY = """
 SELECT * FROM teachers WHERE id = $1
 """
 
+GET_TEACHERS_BY_ORGANIZATION_QUERY = """
+SELECT * FROM teachers WHERE organization_id = $1
+"""
+
 INSERT_TEACHER_QUERY = """
-INSERT INTO teachers (name, email, phone, ...)  -- add all required columns
-VALUES ($1, $2, $3, ...)                       -- match the number of columns
+INSERT INTO teachers (name, email, phone, organization_id, created_at, updated_at)
+VALUES ($1, $2, $3, $4, NOW(), NOW())
 RETURNING *
 """
 
 UPDATE_TEACHER_QUERY = """
 UPDATE teachers
-SET name = $1, email = $2, phone = $3, ...     -- add all updatable columns
-WHERE id = $N                                  -- $N is the last parameter (teacher_id)
+SET name = $1, email = $2, phone = $3, organization_id = $4, updated_at = NOW()
+WHERE id = $5
 RETURNING *
 """
 

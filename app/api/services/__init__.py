@@ -11,6 +11,7 @@ from .file import FileService
 from .user_role import UserRoleService
 from .mail import MailTemplateService
 from .class import ClassService
+from .student import StudentService
 
 __all__ = [
     "UserService", 
@@ -26,4 +27,5 @@ __all__ = [
     "UserRoleService",
     "MailTemplateService",
     "ClassService",
+    "StudentService",
 ]
