@@ -3,8 +3,7 @@ from fastapi import HTTPException
 import asyncpg
 from datetime import datetime
 import logging
-import uuid
-from decimal import Decimal
+from app.api import dependencies
 
 from app.queries.inventory import (
     GET_INVENTORIES_QUERY,
@@ -92,7 +91,7 @@ class InventoryService:
                 errors.append({"field": "organization_id", "message": "Organization ID is required"})
             else:
                 try:
-                    uuid.UUID(str(org_id))
+                    dependencies.convert_objectid(org_id)
                 except (ValueError, AttributeError):
                     errors.append({"field": "organization_id", "message": "Organization ID must be a valid UUID"})
         
@@ -103,7 +102,7 @@ class InventoryService:
                 errors.append({"field": "team_id", "message": "Team ID is required"})
             else:
                 try:
-                    uuid.UUID(str(team_id))
+                    dependencies.convert_objectid(team_id)
                 except (ValueError, AttributeError):
                     errors.append({"field": "team_id", "message": "Team ID must be a valid UUID"})
         
@@ -126,18 +125,6 @@ class InventoryService:
         
         return data
 
-    def _convert_db_types(self, row_dict: dict) -> dict:
-        """Convert database types (UUID, Decimal) to JSON-serializable types"""
-        converted = {}
-        for key, value in row_dict.items():
-            if isinstance(value, uuid.UUID):
-                converted[key] = str(value)
-            elif isinstance(value, Decimal):
-                converted[key] = float(value)
-            else:
-                converted[key] = value
-        return converted
-
     async def get_inventory_data(self, filters: dict = {}) -> List[dict]:
         """Get inventory data with filtering"""
         try:
@@ -146,7 +133,7 @@ class InventoryService:
                     inventory_id = filters.get("id")
                     inventory = await conn.fetchrow(GET_INVENTORY_BY_ID_QUERY, inventory_id)
                     if inventory:
-                        return [self._convert_db_types(dict(inventory))]
+                        return [convert_db_types(dict(inventory))]
                     return []
                 elif "organization_id" in filters and "team_id" in filters:
                     rows = await conn.fetch(
@@ -154,15 +141,15 @@ class InventoryService:
                         filters["organization_id"],
                         filters["team_id"]
                     )
-                    return [self._convert_db_types(dict(row)) for row in rows]
+                    return [convert_db_types(dict(row)) for row in rows]
                 elif "organization_id" in filters:
                     rows = await conn.fetch(
                         GET_INVENTORIES_BY_ORGANIZATION_QUERY,
                         filters["organization_id"]
                     )
-                    return [self._convert_db_types(dict(row)) for row in rows]
+                    return [convert_db_types(dict(row)) for row in rows]
                 rows = await conn.fetch(GET_INVENTORIES_QUERY)
-                return [self._convert_db_types(dict(row)) for row in rows]
+                return [convert_db_types(dict(row)) for row in rows]
         except Exception as e:
             logging.error(f"❌ Error fetching inventory data: {e}")
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
@@ -221,7 +208,7 @@ class InventoryService:
                     team_id
                 )
                 if row:
-                    return self._convert_db_types(dict(row))
+                    return convert_db_types(dict(row))
                 return {}
         except HTTPException:
             raise
@@ -285,7 +272,7 @@ class InventoryService:
                 )
                 if not row:
                     raise HTTPException(status_code=404, detail="Inventory not found")
-                return self._convert_db_types(dict(row))
+                return convert_db_types(dict(row))
         except HTTPException:
             raise
         except Exception as e:
