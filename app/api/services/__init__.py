@@ -10,6 +10,7 @@ from .permission import PermissionService
 from .file import FileService
 from .user_role import UserRoleService
 from .mail import MailTemplateService
+from .class import ClassService
 
 __all__ = [
     "UserService", 
@@ -24,4 +25,5 @@ __all__ = [
     "FileService",
     "UserRoleService",
     "MailTemplateService",
+    "ClassService",
 ]
