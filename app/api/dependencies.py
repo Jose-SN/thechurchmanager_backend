@@ -1,5 +1,8 @@
 from bson import ObjectId
 from fastapi import Request
+import uuid
+from decimal import Decimal
+import logging
 
 def get_db(request: Request):
     return request.app.state.db
@@ -43,3 +46,19 @@ def try_objectid(value):
         return ObjectId(value)
     except Exception:
         return value  # fallback to string if invalid ObjectId
+
+def convert_db_types(row_dict: dict) -> dict:
+    try:
+        """Convert database types (UUID, Decimal) to JSON-serializable types"""
+        converted = {}
+        for key, value in row_dict.items():
+            if isinstance(value, uuid.UUID):
+                converted[key] = str(value)
+            elif isinstance(value, Decimal):
+                converted[key] = float(value)
+            else:
+                converted[key] = value
+        return converted
+    except Exception as e:
+        logging.error(f"❌ Error converting database types: {e}")
+        return row_dict
