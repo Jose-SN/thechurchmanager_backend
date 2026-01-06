@@ -1,7 +1,7 @@
 -- Permissions table reflecting IPermissionSchema (merged from both definitions)
 CREATE TABLE IF NOT EXISTS permissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL,
     role_id UUID,
     module_id UUID,
     team_id UUID,

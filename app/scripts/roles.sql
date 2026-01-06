@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS roles (
     name TEXT NOT NULL,
     description TEXT,
     team_id UUID,
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL,
     type TEXT,
     permissions JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

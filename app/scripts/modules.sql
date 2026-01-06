@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS modules (
     name TEXT NOT NULL,
     key TEXT NOT NULL,
     description TEXT,
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
