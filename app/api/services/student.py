@@ -2,8 +2,7 @@ from typing import List
 from fastapi import HTTPException
 import asyncpg
 import logging
-from app.api.dependencies import convert_db_types
-
+from app.api import dependencies
 from app.queries.student import (
     GET_STUDENTS_QUERY,
     GET_STUDENT_BY_ID_QUERY,
@@ -26,22 +25,22 @@ class StudentService:
                 if "id" in filters:
                     student = await conn.fetchrow(GET_STUDENT_BY_ID_QUERY, filters["id"])
                     if student:
-                        return [convert_db_types(dict(student))]
+                        return [dependencies.convert_db_types(dict(student))]
                     return []
                 elif "organization_id" in filters:
                     rows = await conn.fetch(
                         GET_STUDENTS_BY_ORGANIZATION_QUERY,
                         filters["organization_id"]
                     )
-                    return [convert_db_types(dict(row)) for row in rows]
+                    return [dependencies.convert_db_types(dict(row)) for row in rows]
                 elif "class_id" in filters:
                     rows = await conn.fetch(
                         GET_STUDENTS_BY_CLASS_QUERY,
                         filters["class_id"]
                     )
-                    return [convert_db_types(dict(row)) for row in rows]
+                    return [dependencies.convert_db_types(dict(row)) for row in rows]
                 rows = await conn.fetch(GET_STUDENTS_QUERY)
-                return [convert_db_types(dict(row)) for row in rows]
+                return [dependencies.convert_db_types(dict(row)) for row in rows]
         except Exception as e:
             logging.error(f"❌ Error fetching student data: {e}")
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
@@ -50,22 +49,24 @@ class StudentService:
         """Save new student"""
         try:
             async with self.db_pool.acquire() as conn:
-                name = student_data.get('name', '')
+                first_name = student_data.get('first_name', '')
+                last_name = student_data.get('last_name', '')
                 email = student_data.get('email')
                 phone = student_data.get('phone')
-                organization_id = student_data.get('organization_id')
-                class_id = student_data.get('class_id')
+                organization_id = dependencies.convert_objectid(student_data.get('organization_id'))
+                class_id = dependencies.convert_objectid(student_data.get('class_id'))
                 
                 row = await conn.fetchrow(
                     INSERT_STUDENT_QUERY,
-                    name,
+                    first_name,
+                    last_name,
                     email,
                     phone,
                     organization_id,
                     class_id
                 )
                 if row:
-                    return convert_db_types(dict(row))
+                    return dependencies.convert_db_types(dict(row))
                 return {}
         except Exception as e:
             logging.error(f"❌ Error saving student data: {e}")
@@ -87,15 +88,17 @@ class StudentService:
                 merged_data = dict(existing)
                 merged_data.update(student_data)
                 
-                name = merged_data.get('name', '')
+                first_name = merged_data.get('first_name', '')
+                last_name = merged_data.get('last_name', '')
                 email = merged_data.get('email')
                 phone = merged_data.get('phone')
-                organization_id = merged_data.get('organization_id')
-                class_id = merged_data.get('class_id')
+                organization_id = dependencies.convert_objectid(merged_data.get('organization_id'))
+                class_id = dependencies.convert_objectid(merged_data.get('class_id'))
                 
                 row = await conn.fetchrow(
                     UPDATE_STUDENT_QUERY,
-                    name,
+                    first_name,
+                    last_name,
                     email,
                     phone,
                     organization_id,
@@ -103,7 +106,7 @@ class StudentService:
                     student_id
                 )
                 if row:
-                    return convert_db_types(dict(row))
+                    return dependencies.convert_db_types(dict(row))
                 raise HTTPException(status_code=404, detail="Student not found")
         except HTTPException:
             raise
