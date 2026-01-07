@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request, Path
+from fastapi import APIRouter, Depends, Query, Request
 from typing import Optional
 from app.api.controllers import TeacherController
 from app.api.services import TeacherService
@@ -38,7 +38,7 @@ async def get_teachers(
 
 @teacher_router.get("/get/{teacher_id}")
 async def get_teacher_by_id(
-    teacher_id: str = Path(..., description="ID of the teacher to retrieve"),
+    teacher_id: str,
     teacher_controller: TeacherController = Depends(get_teacher_controller)
 ):
     """Get a single teacher by ID."""
@@ -46,7 +46,7 @@ async def get_teacher_by_id(
 
 @teacher_router.put("/update/{teacher_id}")
 async def update_teacher(
-    teacher_id: str = Path(..., description="ID of the teacher to update"),
+    teacher_id: str,
     request: Request,
     teacher_controller: TeacherController = Depends(get_teacher_controller)
 ):
@@ -55,7 +55,7 @@ async def update_teacher(
 
 @teacher_router.delete("/delete/{teacher_id}")
 async def delete_teacher(
-    teacher_id: str = Path(..., description="ID of the teacher to delete"),
+    teacher_id: str,
     teacher_controller: TeacherController = Depends(get_teacher_controller)
 ):
     """Delete a teacher."""

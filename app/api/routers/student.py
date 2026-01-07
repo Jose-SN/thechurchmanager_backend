@@ -44,7 +44,7 @@ async def get_student_by_id(
 
 @student_router.put("/update/{student_id}")
 async def update_student(
-    student_id: str = Path(..., description="ID of the student to update"),
+    student_id: str,
     request: Request,
     student_controller: StudentController = Depends(get_student_controller)
 ):
