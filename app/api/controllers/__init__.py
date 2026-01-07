@@ -10,7 +10,7 @@ from .permission import PermissionController
 from .file import FileController
 from .user_role import UserRoleController
 from .mail import MailTemplateController
-from .class import ClassController
+from .classes import ClassController
 from .student import StudentController
 
 __all__ = [

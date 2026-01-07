@@ -10,7 +10,7 @@ from .permission import PermissionService
 from .file import FileService
 from .user_role import UserRoleService
 from .mail import MailTemplateService
-from .class import ClassService
+from .classes import ClassService
 from .student import StudentService
 
 __all__ = [

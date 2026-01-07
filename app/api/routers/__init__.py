@@ -15,7 +15,7 @@ from .permission import permission_router
 from .file import file_router
 from .user_role import user_role_router
 from .mail import mail_template_router
-from .class import class_router
+from .classes import class_router
 from .student import student_router
 from .health import router as health_router  # rename the file if needed
 

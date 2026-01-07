@@ -1,6 +1,6 @@
 from fastapi import Request, HTTPException
 from fastapi.encoders import jsonable_encoder
-from app.api.services.class import ClassService
+from app.api.services import ClassService
 from fastapi.responses import JSONResponse
 import logging
 import uuid
