@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     GMAIL_PASS: str = Field(default='', validation_alias='GMAIL_PASS')
     THE_CHURCH_MANAGER_APP: str = Field(default='', validation_alias='THE_CHURCH_MANAGER_APP')
     
+    # Amazon SES settings
+    SES_SMTP_SERVER: str = Field(default='', validation_alias='SES_SMTP_SERVER')
+    SES_SMTP_PORT: int = Field(default=587, validation_alias='SES_SMTP_PORT')
+    SES_SMTP_USERNAME: str = Field(default='', validation_alias='SES_SMTP_USERNAME')
+    SES_SMTP_PASSWORD: str = Field(default='', validation_alias='SES_SMTP_PASSWORD')
+    SES_FROM_EMAIL: str = Field(default='', validation_alias='SES_FROM_EMAIL')
+    
     # PostgreSQL settings
     POSTGRESQL_DB_HOST: str = Field(default='localhost', validation_alias='POSTGRESQL_DB_HOST')
     POSTGRESQL_DB_PORT: int = Field(default=5432, validation_alias='POSTGRESQL_DB_PORT')

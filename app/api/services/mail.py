@@ -14,7 +14,7 @@ from app.queries.mail_template import (
     UPDATE_MAIL_TEMPLATE_QUERY,
     DELETE_MAIL_TEMPLATE_QUERY,
 )
-from app.utils.mail import send_gmail
+from app.utils.mail import send_gmail, send_ses_email
 
 class MailTemplateService:
     def __init__(self, db_pool: asyncpg.Pool):
@@ -23,8 +23,8 @@ class MailTemplateService:
     async def get_mail_template_data(self, filters: dict = {}) -> List[dict]:
         try:
             async with self.db_pool.acquire() as conn:
-                if "id" in filters or "_id" in filters:
-                    template_id = filters.get("id") or filters.get("_id")
+                if "id" in filters:
+                    template_id = filters.get("id")
                     template = await conn.fetchrow(GET_MAIL_TEMPLATE_BY_ID_QUERY, template_id)
                     if template:
                         return [dict(template)]
@@ -58,13 +58,13 @@ class MailTemplateService:
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
     async def update_mail_template_data(self, template_data: dict) -> dict:
-        template_id = template_data.get("id") or template_data.get("_id")
+        template_id = template_data.get("id")
         if not template_id:
             raise HTTPException(status_code=400, detail="Mail Template ID is required")
         
         try:
             async with self.db_pool.acquire() as conn:
-                update_data = {k: v for k, v in template_data.items() if k not in ("_id", "id")}
+                update_data = {k: v for k, v in template_data.items() if k not in ("id")}
                 key = update_data.get("key", "")
                 subject = update_data.get("subject", "")
                 body = update_data.get("body", "")
@@ -256,4 +256,38 @@ class MailTemplateService:
         except Exception as e:
             print(f"❌ Error sending bulk mail with template: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to send bulk emails: {str(e)}")
+
+    async def send_simple_email(self, to: str, subject: str, body: str, provider: str = "gmail", from_email: str = None) -> dict:
+        """
+        Send a simple email without using templates.
+        
+        Args:
+            to: Recipient email address (required)
+            subject: Email subject (required)
+            body: Email body/content (required)
+            provider: Email provider - "gmail" or "ses" (default: "gmail")
+            from_email: Optional sender email (for SES only)
+        
+        Returns:
+            dict with success message
+        """
+        try:
+            if provider.lower() == "ses":
+                result = await send_ses_email(to=to, subject=subject, body=body, from_email=from_email)
+            else:
+                result = await send_gmail(to=to, subject=subject, body=body)
+            
+            return {
+                "success": True,
+                "message": "Email sent successfully",
+                "provider": provider,
+                "recipient": to,
+                "subject": subject,
+                "details": result
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"❌ Error sending email: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 

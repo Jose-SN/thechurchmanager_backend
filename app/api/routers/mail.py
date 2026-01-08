@@ -15,12 +15,11 @@ def get_mail_template_controller(mail_template_service=Depends(get_mail_template
 @mail_template_router.get("/get-templates")
 async def get_all_mail_templates(mail_template_controller: MailTemplateController = Depends(get_mail_template_controller),
     id: Optional[str] = Query(None),
-    _id: Optional[str] = Query(None),
     key: Optional[str] = Query(None),
     organization_id: Optional[str] = Query(None)):
     filters = {}
-    if id or _id:
-        filters["id"] = id or _id
+    if id:
+        filters["id"] = id
     if key:
         filters["key"] = key
     if organization_id:
@@ -111,4 +110,39 @@ async def send_bulk_mail(request: Request, mail_template_controller: MailTemplat
     - "user_created_by_organization" - User created by organization template (includes reset password link)
     """
     return await mail_template_controller.send_bulk_mail_controller(request)
+
+@mail_template_router.post("/send-email")
+async def send_simple_email(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
+    """
+    Send a simple email without using templates. Supports both Gmail and Amazon SES.
+    
+    Request body:
+    {
+        "to": "recipient@example.com",      // Required: recipient email address
+        "subject": "Email Subject",         // Required: email subject
+        "body": "Email body content",       // Required: email body/content
+        "provider": "gmail",                // Optional: "gmail" or "ses" (default: "gmail")
+        "from_email": "sender@example.com"  // Optional: sender email (for SES only)
+    }
+    
+    Response (Success - 200):
+    {
+        "success": true,
+        "message": "Email sent successfully",
+        "provider": "gmail",
+        "recipient": "recipient@example.com",
+        "subject": "Email Subject",
+        "details": {
+            "message": "Email sent successfully"
+        }
+    }
+    
+    Response (Error - 400):
+    {
+        "success": false,
+        "message": "Send email failed",
+        "error": "Error message"
+    }
+    """
+    return await mail_template_controller.send_simple_email_controller(request)
 

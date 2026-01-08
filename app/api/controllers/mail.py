@@ -142,3 +142,67 @@ class MailTemplateController:
                 "error": str(err)
             })
 
+    async def send_simple_email_controller(self, request: Request):
+        """Send a simple email without using templates. Supports both Gmail and SES."""
+        try:
+            # Parse JSON with error handling
+            try:
+                body = await request.json()
+            except ValueError as json_err:
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "message": "Invalid JSON in request body. Please ensure the request body contains valid JSON.",
+                    "error": str(json_err)
+                })
+            
+            if not body:
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "message": "Request body is required"
+                })
+            
+            to = body.get("to")
+            subject = body.get("subject")
+            email_body = body.get("body")
+            provider = body.get("provider", "gmail")  # Default to gmail
+            from_email = body.get("from_email")  # Optional, for SES
+            
+            if not to:
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "message": "to (recipient email) is required"
+                })
+            
+            if not subject:
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "message": "subject is required"
+                })
+            
+            if not email_body:
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "message": "body is required"
+                })
+            
+            if provider.lower() not in ["gmail", "ses"]:
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "message": "provider must be either 'gmail' or 'ses'"
+                })
+            
+            result = await self.mail_template_service.send_simple_email(
+                to=to,
+                subject=subject,
+                body=email_body,
+                provider=provider,
+                from_email=from_email
+            )
+            return JSONResponse(status_code=200, content=result)
+        except Exception as err:
+            return JSONResponse(status_code=400, content={
+                "success": False,
+                "message": "Send email failed",
+                "error": str(err)
+            })
+
