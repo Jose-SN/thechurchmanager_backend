@@ -12,6 +12,7 @@ from .user_role import UserRoleController
 from .mail import MailTemplateController
 from .classes import ClassController
 from .student import StudentController
+from .account import AccountController
 
 __all__ = [
     "UserController", 
@@ -28,4 +29,5 @@ __all__ = [
     "MailTemplateController",
     "ClassController",
     "StudentController",
+    "AccountController",
     ]

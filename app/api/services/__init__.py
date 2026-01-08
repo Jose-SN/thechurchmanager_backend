@@ -12,6 +12,7 @@ from .user_role import UserRoleService
 from .mail import MailTemplateService
 from .classes import ClassService
 from .student import StudentService
+from .account import AccountService
 
 __all__ = [
     "UserService", 
@@ -28,4 +29,5 @@ __all__ = [
     "MailTemplateService",
     "ClassService",
     "StudentService",
+    "AccountService",
 ]
