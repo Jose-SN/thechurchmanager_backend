@@ -15,15 +15,14 @@ def get_user_role_controller(user_role_service=Depends(get_user_role_service)):
 @user_role_router.get("/get")
 async def get_all_user_roles(user_role_controller: UserRoleController = Depends(get_user_role_controller),
     id: Optional[str] = Query(None),
-    _id: Optional[str] = Query(None),
     organization_id: Optional[str] = Query(None),
     user_id: Optional[str] = Query(None),
     role_id: Optional[str] = Query(None),
     role_ids: Optional[List[str]] = Query(None),
     team_id: Optional[str] = Query(None)):
     filters = {}
-    if id or _id:
-        filters["id"] = id or _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
     if user_id:
@@ -59,14 +58,13 @@ async def update_roles(request: Request, user_role_controller: UserRoleControlle
 @user_role_router.get("/get-overview")
 async def get_user_roles_overview(user_role_controller: UserRoleController = Depends(get_user_role_controller),
     id: str = Query(None),
-    _id: str = Query(None),
     organization_id: str = Query(None),
     user_id: str = Query(None),
     role_id: str = Query(None),
     team_id: str = Query(None)):
     filters = {}
-    if id or _id:
-        filters["id"] = id or _id
+    if id:
+        filters["id"] = id
     if organization_id:
         filters["organization_id"] = organization_id
     if user_id:

@@ -133,7 +133,7 @@ class InventoryService:
                     inventory_id = filters.get("id")
                     inventory = await conn.fetchrow(GET_INVENTORY_BY_ID_QUERY, inventory_id)
                     if inventory:
-                        return [convert_db_types(dict(inventory))]
+                        return [dependencies.convert_db_types(dict(inventory))]
                     return []
                 elif "organization_id" in filters and "team_id" in filters:
                     rows = await conn.fetch(
@@ -141,15 +141,15 @@ class InventoryService:
                         filters["organization_id"],
                         filters["team_id"]
                     )
-                    return [convert_db_types(dict(row)) for row in rows]
+                    return [dependencies.convert_db_types(dict(row)) for row in rows]
                 elif "organization_id" in filters:
                     rows = await conn.fetch(
                         GET_INVENTORIES_BY_ORGANIZATION_QUERY,
                         filters["organization_id"]
                     )
-                    return [convert_db_types(dict(row)) for row in rows]
+                    return [dependencies.convert_db_types(dict(row)) for row in rows]
                 rows = await conn.fetch(GET_INVENTORIES_QUERY)
-                return [convert_db_types(dict(row)) for row in rows]
+                return [dependencies.convert_db_types(dict(row)) for row in rows]
         except Exception as e:
             logging.error(f"❌ Error fetching inventory data: {e}")
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
@@ -208,7 +208,7 @@ class InventoryService:
                     team_id
                 )
                 if row:
-                    return convert_db_types(dict(row))
+                    return dependencies.convert_db_types(dict(row))
                 return {}
         except HTTPException:
             raise
@@ -272,7 +272,7 @@ class InventoryService:
                 )
                 if not row:
                     raise HTTPException(status_code=404, detail="Inventory not found")
-                return convert_db_types(dict(row))
+                return dependencies.convert_db_types(dict(row))
         except HTTPException:
             raise
         except Exception as e:

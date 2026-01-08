@@ -33,8 +33,8 @@ class UserRoleService:
     async def get_user_role_data(self, filters: dict = {}) -> List[dict]:
         try:
             async with self.db_pool.acquire() as conn:
-                if "id" in filters or "_id" in filters:
-                    user_role_id = filters.get("id") or filters.get("_id")
+                if "id" in filters:
+                    user_role_id = filters.get("id")
                     user_role = await conn.fetchrow(GET_USER_ROLE_BY_ID_QUERY, user_role_id)
                     if user_role:
                         return [dict(user_role)]
@@ -119,13 +119,13 @@ class UserRoleService:
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
     async def update_user_role_data(self, user_role_data: dict) -> dict:
-        user_role_id = user_role_data.get("id") or user_role_data.get("_id")
+        user_role_id = user_role_data.get("id")
         if not user_role_id:
             raise HTTPException(status_code=400, detail="User Role ID is required")
         
         try:
             async with self.db_pool.acquire() as conn:
-                update_data = {k: v for k, v in user_role_data.items() if k not in ("_id", "id")}
+                update_data = {k: v for k, v in user_role_data.items() if k not in ("id")}
                 organization_id = update_data.get("organization_id", "")
                 user_id = update_data.get("user_id", "")
                 role_id = update_data.get("role_id", "")
@@ -213,8 +213,8 @@ class UserRoleService:
         """
         try:
             async with self.db_pool.acquire() as conn:
-                if "id" in filters or "_id" in filters:
-                    user_role_id = filters.get("id") or filters.get("_id")
+                if "id" in filters:
+                    user_role_id = filters.get("id")
                     user_role = await conn.fetchrow(GET_USER_ROLE_OVERVIEW_BY_ID_QUERY, user_role_id)
                     if user_role:
                         return [dict(user_role)]
