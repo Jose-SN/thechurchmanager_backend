@@ -38,111 +38,122 @@ async def update_mail_template(request: Request, mail_template_controller: MailT
 async def delete_mail_template(template_id: str, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
     return await mail_template_controller.delete_mail_template_controller(template_id)
 
-@mail_template_router.post("/send")
-async def send_mail(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
-    """
-    Send email using a template by key.
+# @mail_template_router.post("/send")
+# async def send_mail(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
+#     """
+#     Send email using a template by key.
     
-    Request body:
-    {
-        "template_key": "welcome_email",  // Required: template key
-        "to": "user@example.com",         // Required: recipient email
-        "subject": "Custom Subject",       // Optional: override template subject
-        "body": "Custom Body",             // Optional: override template body
-        "user_data": {                     // Optional: user data for template variables
-            "email": "user@example.com",
-            "name": "John Doe",
-            "firstName": "John",
-            "lastName": "Doe",
-            "id": "user-id"
-        }
-    }
-    """
-    return await mail_template_controller.send_mail_controller(request)
+#     Request body:
+#     {
+#         "template_key": "welcome_email",  // Required: template key
+#         "to": "user@example.com",         // Required: recipient email
+#         "subject": "Custom Subject",       // Optional: override template subject
+#         "body": "Custom Body",             // Optional: override template body
+#         "user_data": {                     // Optional: user data for template variables
+#             "email": "user@example.com",
+#             "name": "John Doe",
+#             "firstName": "John",
+#             "lastName": "Doe",
+#             "id": "user-id"
+#         }
+#     }
+#     """
+#     return await mail_template_controller.send_mail_controller(request)
 
-@mail_template_router.post("/send-bulk")
-async def send_bulk_mail(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
-    """
-    Send emails to multiple users using a template by key.
-    Each user will receive personalized email with their data.
+# @mail_template_router.post("/send-bulk")
+# async def send_bulk_mail(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
+#     """
+#     Send emails to multiple users using a template by key.
+#     Each user will receive personalized email with their data.
     
-    Request body:
-    {
-        "template_key": "welcome_email",  // Required: template key (e.g., "welcome", "forgot_password", "user_created_by_organization")
-        "users": [                        // Required: array of user objects
-            {
-                "email": "user1@example.com",
-                "phone": "+1234567890",
-                "name": "John Doe",
-                "first_name": "John",
-                "last_name": "Doe",
-                "id": "user-id-1"
-            },
-            {
-                "email": "user2@example.com",
-                "phone": "+1234567890",
-                "name": "Jane Smith",
-                "first_name": "Jane",
-                "last_name": "Smith",
-                "id": "user-id-2"
-            }
-        ],
-        "extra_variables": {              // Optional: shared variables for all users
-            "reset_link": "https://example.com/forgot-password?token=xxx",
-            "organization_name": "Church Name",
-            "expiry_time": "24 hours"
-        }
-    }
+#     Request body:
+#     {
+#         "template_key": "welcome_email",  // Required: template key (e.g., "welcome", "forgot_password", "user_created_by_organization")
+#         "users": [                        // Required: array of user objects
+#             {
+#                 "email": "user1@example.com",
+#                 "phone": "+1234567890",
+#                 "name": "John Doe",
+#                 "first_name": "John",
+#                 "last_name": "Doe",
+#                 "id": "user-id-1"
+#             },
+#             {
+#                 "email": "user2@example.com",
+#                 "phone": "+1234567890",
+#                 "name": "Jane Smith",
+#                 "first_name": "Jane",
+#                 "last_name": "Smith",
+#                 "id": "user-id-2"
+#             }
+#         ],
+#         "extra_variables": {              // Optional: shared variables for all users
+#             "reset_link": "https://example.com/forgot-password?token=xxx",
+#             "organization_name": "Church Name",
+#             "expiry_time": "24 hours"
+#         }
+#     }
     
-    Template variables available:
-    - {{email}} - User's email address
-    - {{phone}} - User's phone number
-    - {{name}} - User's full name
-    - {{first_name}} - User's first name
-    - {{last_name}} - User's last name
-    - {{reset_link}} - Password reset link (from extra_variables)
-    - {{organization_name}} - Organization name (from extra_variables)
-    - {{expiry_time}} - Link expiry time (from extra_variables)
+#     Template variables available:
+#     - {{email}} - User's email address
+#     - {{phone}} - User's phone number
+#     - {{name}} - User's full name
+#     - {{first_name}} - User's first name
+#     - {{last_name}} - User's last name
+#     - {{reset_link}} - Password reset link (from extra_variables)
+#     - {{organization_name}} - Organization name (from extra_variables)
+#     - {{expiry_time}} - Link expiry time (from extra_variables)
     
-    Available templates:
-    - "welcome" - Welcome email template
-    - "forgot_password" - Password reset template
-    - "user_created_by_organization" - User created by organization template (includes reset password link)
-    """
-    return await mail_template_controller.send_bulk_mail_controller(request)
+#     Available templates:
+#     - "welcome" - Welcome email template
+#     - "forgot_password" - Password reset template
+#     - "user_created_by_organization" - User created by organization template (includes reset password link)
+#     """
+#     return await mail_template_controller.send_bulk_mail_controller(request)
 
-@mail_template_router.post("/send-email")
-async def send_simple_email(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
-    """
-    Send a simple email without using templates. Supports both Gmail and Amazon SES.
+# @mail_template_router.post("/send-email")
+# async def send_simple_email(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
+#     """
+#     Send a simple email without using templates. Supports both Gmail and Amazon SES.
     
-    Request body:
-    {
-        "to": "recipient@example.com",      // Required: recipient email address
-        "subject": "Email Subject",         // Required: email subject
-        "body": "Email body content",       // Required: email body/content
-        "provider": "gmail",                // Optional: "gmail" or "ses" (default: "gmail")
-        "from_email": "sender@example.com"  // Optional: sender email (for SES only)
-    }
+#     Request body:
+#     {
+#         "to": "recipient@example.com",      // Required: recipient email address
+#         "subject": "Email Subject",         // Required: email subject
+#         "body": "Email body content",       // Required: email body/content
+#         "provider": "gmail",                // Optional: "gmail" or "ses" (default: "gmail")
+#         "from_email": "sender@example.com"  // Optional: sender email (for SES only)
+#     }
     
-    Response (Success - 200):
-    {
-        "success": true,
-        "message": "Email sent successfully",
-        "provider": "gmail",
-        "recipient": "recipient@example.com",
-        "subject": "Email Subject",
-        "details": {
-            "message": "Email sent successfully"
-        }
-    }
+#     Response (Success - 200):
+#     {
+#         "success": true,
+#         "message": "Email sent successfully",
+#         "provider": "gmail",
+#         "recipient": "recipient@example.com",
+#         "subject": "Email Subject",
+#         "details": {
+#             "message": "Email sent successfully"
+#         }
+#     }
     
-    Response (Error - 400):
-    {
-        "success": false,
-        "message": "Send email failed",
-        "error": "Error message"
-    }
-    """
-    return await mail_template_controller.send_simple_email_controller(request)
+#     Response (Error - 400):
+#     {
+#         "success": false,
+#         "message": "Send email failed",
+#         "error": "Error message"
+#     }
+#     """
+#     return await mail_template_controller.send_simple_email_controller(request)
 
+@mail_template_router.post("/send-gmail")
+async def send_gmail(request: Request, mail_template_controller: MailTemplateController = Depends(get_mail_template_controller)):
+    return await mail_template_controller.send_email_gmail_controller(request)
+    # """Send an email using Gmail SMTP"""
+    # Request body:
+    # {
+    #     "to": "recipient@example.com",      // Required: recipient email address
+    #     "subject": "Email Subject",         // Required: email subject
+    #     "body": "Email body content",       // Required: email body/content
+    # }
+    # """

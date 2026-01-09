@@ -4,7 +4,6 @@ import asyncpg
 from datetime import datetime, timedelta
 from app.core.config import settings
 from app.api import dependencies
-
 from app.queries.mail_template import (
     GET_MAIL_TEMPLATES_QUERY,
     GET_MAIL_TEMPLATE_BY_ID_QUERY,
@@ -14,7 +13,7 @@ from app.queries.mail_template import (
     UPDATE_MAIL_TEMPLATE_QUERY,
     DELETE_MAIL_TEMPLATE_QUERY,
 )
-from app.utils.mail import send_gmail, send_ses_email
+from app.utils.mail import send_email_gmail #send_gmail, send_ses_email, 
 
 class MailTemplateService:
     def __init__(self, db_pool: asyncpg.Pool):
@@ -105,185 +104,203 @@ class MailTemplateService:
             print(f"❌ Error fetching mail template by key: {e}")
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
-    def _replace_template_variables(self, text: str, variables: dict) -> str:
-        """Replace template variables like {{name}}, {{email}} in text"""
-        result = text
-        for key, value in variables.items():
-            placeholder = f"{{{{{key}}}}}"
-            result = result.replace(placeholder, str(value))
-        return result
+    # def _replace_template_variables(self, text: str, variables: dict) -> str:
+    #     """Replace template variables like {{name}}, {{email}} in text"""
+    #     result = text
+    #     for key, value in variables.items():
+    #         placeholder = f"{{{{{key}}}}}"
+    #         result = result.replace(placeholder, str(value))
+    #     return result
 
-    async def send_mail_with_template(self, template_key: str, to: str, subject_override: str = None, body_override: str = None, user_data: dict = None, extra_variables: dict = None) -> dict:
-        """
-        Get a mail template by key, optionally override subject/body, and send the email.
+    # async def send_mail_with_template(self, template_key: str, to: str, subject_override: str = None, body_override: str = None, user_data: dict = None, extra_variables: dict = None) -> dict:
+    #     """
+    #     Get a mail template by key, optionally override subject/body, and send the email.
         
-        Args:
-            template_key: The key of the template to use
-            to: Recipient email address
-            subject_override: Optional subject to override template subject
-            body_override: Optional body to override template body
-            user_data: Optional user data for template variable replacement
-            extra_variables: Optional extra variables like reset_link, organization_name, etc.
+    #     Args:
+    #         template_key: The key of the template to use
+    #         to: Recipient email address
+    #         subject_override: Optional subject to override template subject
+    #         body_override: Optional body to override template body
+    #         user_data: Optional user data for template variable replacement
+    #         extra_variables: Optional extra variables like reset_link, organization_name, etc.
         
-        Returns:
-            dict with success message
-        """
-        try:
-            # Get template by key
-            template = await self.get_template_by_key(template_key)
+    #     Returns:
+    #         dict with success message
+    #     """
+    #     try:
+    #         # Get template by key
+    #         template = await self.get_template_by_key(template_key)
             
-            # Use override values if provided, otherwise use template values
-            subject = subject_override if subject_override is not None else template.get("subject", "")
-            body = body_override if body_override is not None else template.get("body", "")
+    #         # Use override values if provided, otherwise use template values
+    #         subject = subject_override if subject_override is not None else template.get("subject", "")
+    #         body = body_override if body_override is not None else template.get("body", "")
             
-            # Prepare variables for replacement
-            variables = {}
+    #         # Prepare variables for replacement
+    #         variables = {}
             
-            # Add user_data variables if provided
-            if user_data:
-                variables.update({
-                    "email": user_data.get("email", to),
-                    "phone": user_data.get("phone", ""),
-                    "name": user_data.get("name", "") or (user_data.get("first_name", "") + " " + user_data.get("last_name", "")).strip(),
-                    "first_name": user_data.get("first_name", ""),
-                    "last_name": user_data.get("last_name", ""),
-                })
+    #         # Add user_data variables if provided
+    #         if user_data:
+    #             variables.update({
+    #                 "email": user_data.get("email", to),
+    #                 "phone": user_data.get("phone", ""),
+    #                 "name": user_data.get("name", "") or (user_data.get("first_name", "") + " " + user_data.get("last_name", "")).strip(),
+    #                 "first_name": user_data.get("first_name", ""),
+    #                 "last_name": user_data.get("last_name", ""),
+    #             })
             
-            # Add extra variables if provided (like reset_link, organization_name, etc.)
-            if extra_variables:
-                variables.update(extra_variables)
+    #         # Add extra variables if provided (like reset_link, organization_name, etc.)
+    #         if extra_variables:
+    #             variables.update(extra_variables)
             
-            # Replace variables in subject and body if we have any variables
-            if variables:
-                subject = self._replace_template_variables(subject, variables)
-                body = self._replace_template_variables(body, variables)
+    #         # Replace variables in subject and body if we have any variables
+    #         if variables:
+    #             subject = self._replace_template_variables(subject, variables)
+    #             body = self._replace_template_variables(body, variables)
             
-            # Send the email
-            result = await send_gmail(to=to, subject=subject, body=body)
-            return {
-                "success": True,
-                "message": "Email sent successfully",
-                "template_key": template_key,
-                "recipient": to,
-                "subject": subject,
-                "details": result
-            }
-        except HTTPException:
-            raise
-        except Exception as e:
-            print(f"❌ Error sending mail with template: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+    #         # Send the email
+    #         result = await send_gmail(to=to, subject=subject, body=body)
+    #         return {
+    #             "success": True,
+    #             "message": "Email sent successfully",
+    #             "template_key": template_key,
+    #             "recipient": to,
+    #             "subject": subject,
+    #             "details": result
+    #         }
+    #     except HTTPException:
+    #         raise
+    #     except Exception as e:
+    #         print(f"❌ Error sending mail with template: {e}")
+    #         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
-    async def send_bulk_mail_with_template(self, template_key: str, users: List[dict], extra_variables: dict = None) -> dict:
-        """
-        Send emails to multiple users using a template by key.
-        Each user will receive the template with their personalized data (email, name, etc.)
+    # async def send_bulk_mail_with_template(self, template_key: str, users: List[dict], extra_variables: dict = None) -> dict:
+    #     """
+    #     Send emails to multiple users using a template by key.
+    #     Each user will receive the template with their personalized data (email, name, etc.)
         
-        Args:
-            template_key: The key of the template to use
-            users: List of user objects, each should have at least 'email' field
-            extra_variables: Optional extra variables like reset_link, organization_name, etc. (shared across all users)
+    #     Args:
+    #         template_key: The key of the template to use
+    #         users: List of user objects, each should have at least 'email' field
+    #         extra_variables: Optional extra variables like reset_link, organization_name, etc. (shared across all users)
         
-        Returns:
-            dict with success/failure counts and details
-        """
-        try:
-            # Get template by key
-            template = await self.get_template_by_key(template_key)
+    #     Returns:
+    #         dict with success/failure counts and details
+    #     """
+    #     try:
+    #         # Get template by key
+    #         template = await self.get_template_by_key(template_key)
             
-            results = {
-                "success": True,
-                "template_key": template_key,
-                "total_users": len(users),
-                "successful": 0,
-                "failed": 0,
-                "details": []
-            }
+    #         results = {
+    #             "success": True,
+    #             "template_key": template_key,
+    #             "total_users": len(users),
+    #             "successful": 0,
+    #             "failed": 0,
+    #             "details": []
+    #         }
             
-            # Process each user
-            for user in users:
-                user_email = user.get("email")
-                user_phone = user.get("phone")
-                if not user_email:
-                    results["failed"] += 1
-                    results["details"].append({
-                        "user": user,
-                        "status": "failed",
-                        "error": "Email address not found in user data"
-                    })
-                    continue
+    #         # Process each user
+    #         for user in users:
+    #             user_email = user.get("email")
+    #             user_phone = user.get("phone")
+    #             if not user_email:
+    #                 results["failed"] += 1
+    #                 results["details"].append({
+    #                     "user": user,
+    #                     "status": "failed",
+    #                     "error": "Email address not found in user data"
+    #                 })
+    #                 continue
                 
-                try:
-                    # Prepare variables for replacement
-                    organization_name = user.get("organization", {}).get("name", "");
-                    variables = {
-                        "email": user_email,
-                        "phone": user_phone or "",
-                        "first_name": user.get("first_name", ""),
-                        "last_name": user.get("last_name", ""),
-                        "organization_name": organization_name,
-                        "reset_link": (extra_variables.get("reset_link", "") if extra_variables else "") or (settings.THE_CHURCH_MANAGER_APP)+"/pages/authentication/forgotpassword/",
-                    }
+    #             try:
+    #                 # Prepare variables for replacement
+    #                 organization_name = user.get("organization", {}).get("name", "");
+    #                 variables = {
+    #                     "email": user_email,
+    #                     "phone": user_phone or "",
+    #                     "first_name": user.get("first_name", ""),
+    #                     "last_name": user.get("last_name", ""),
+    #                     "organization_name": organization_name,
+    #                     "reset_link": (extra_variables.get("reset_link", "") if extra_variables else "") or (settings.THE_CHURCH_MANAGER_APP)+"/pages/authentication/forgotpassword/",
+    #                 }
                     
-                    # Add extra variables if provided (like reset_link, organization_name, etc.)
-                    if extra_variables:
-                        variables.update(extra_variables)
+    #                 # Add extra variables if provided (like reset_link, organization_name, etc.)
+    #                 if extra_variables:
+    #                     variables.update(extra_variables)
                     
-                    # Replace variables in subject and body
-                    subject = self._replace_template_variables(template.get("subject", ""), variables)
-                    body = self._replace_template_variables(template.get("body", ""), variables)
+    #                 # Replace variables in subject and body
+    #                 subject = self._replace_template_variables(template.get("subject", ""), variables)
+    #                 body = self._replace_template_variables(template.get("body", ""), variables)
                     
-                    # Send the email
-                    await send_gmail(to=user_email, subject=subject, body=body)
+    #                 # Send the email
+    #                 await send_gmail(to=user_email, subject=subject, body=body)
                     
-                    results["successful"] += 1
-                    results["details"].append({
-                        "user": user_email,
-                        "status": "success",
-                    })
-                except Exception as e:
-                    results["failed"] += 1
-                    results["details"].append({
-                        "user": user_email,
-                        "status": "failed",
-                        "error": str(e)
-                    })
-                    print(f"❌ Error sending email to {user_email}: {e}")
+    #                 results["successful"] += 1
+    #                 results["details"].append({
+    #                     "user": user_email,
+    #                     "status": "success",
+    #                 })
+    #             except Exception as e:
+    #                 results["failed"] += 1
+    #                 results["details"].append({
+    #                     "user": user_email,
+    #                     "status": "failed",
+    #                     "error": str(e)
+    #                 })
+    #                 print(f"❌ Error sending email to {user_email}: {e}")
             
-            return results
-        except HTTPException:
-            raise
-        except Exception as e:
-            print(f"❌ Error sending bulk mail with template: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to send bulk emails: {str(e)}")
+    #         return results
+    #     except HTTPException:
+    #         raise
+    #     except Exception as e:
+    #         print(f"❌ Error sending bulk mail with template: {e}")
+    #         raise HTTPException(status_code=500, detail=f"Failed to send bulk emails: {str(e)}")
 
-    async def send_simple_email(self, to: str, subject: str, body: str, provider: str = "gmail", from_email: str = None) -> dict:
-        """
-        Send a simple email without using templates.
+    # async def send_simple_email(self, to: str, subject: str, body: str, provider: str = "gmail", from_email: str = None) -> dict:
+    #     """
+    #     Send a simple email without using templates.
         
-        Args:
-            to: Recipient email address (required)
-            subject: Email subject (required)
-            body: Email body/content (required)
-            provider: Email provider - "gmail" or "ses" (default: "gmail")
-            from_email: Optional sender email (for SES only)
+    #     Args:
+    #         to: Recipient email address (required)
+    #         subject: Email subject (required)
+    #         body: Email body/content (required)
+    #         provider: Email provider - "gmail" or "ses" (default: "gmail")
+    #         from_email: Optional sender email (for SES only)
         
-        Returns:
-            dict with success message
-        """
+    #     Returns:
+    #         dict with success message
+    #     """
+    #     try:
+    #         if provider.lower() == "ses":
+    #             result = await send_ses_email(to=to, subject=subject, body=body, from_email=from_email)
+    #         else:
+    #             result = await send_gmail(to=to, subject=subject, body=body)
+            
+    #         return {
+    #             "success": True,
+    #             "message": "Email sent successfully",
+    #             "provider": provider,
+    #             "recipient": to,
+    #             "subject": subject,
+    #             "details": result
+    #         }
+    #     except HTTPException:
+    #         raise
+    #     except Exception as e:
+    #         print(f"❌ Error sending email: {e}")
+    #         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+
+    async def send_email_gmail(self, to: str, subject: str, body: str, html: bool = False) -> dict:
+
         try:
-            if provider.lower() == "ses":
-                result = await send_ses_email(to=to, subject=subject, body=body, from_email=from_email)
-            else:
-                result = await send_gmail(to=to, subject=subject, body=body)
+            result = await send_email_gmail(to_email=to, subject=subject, body=body, html=html)
             
             return {
                 "success": True,
                 "message": "Email sent successfully",
-                "provider": provider,
                 "recipient": to,
                 "subject": subject,
-                "details": result
             }
         except HTTPException:
             raise
