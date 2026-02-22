@@ -2,6 +2,7 @@ from bson import ObjectId
 from fastapi import Request
 import uuid
 from decimal import Decimal
+from datetime import date, datetime
 import logging
 
 def get_db(request: Request):
@@ -49,13 +50,17 @@ def try_objectid(value):
 
 def convert_db_types(row_dict: dict) -> dict:
     try:
-        """Convert database types (UUID, Decimal) to JSON-serializable types"""
+        """Convert database types (UUID, Decimal, date, datetime) to JSON-serializable types"""
         converted = {}
         for key, value in row_dict.items():
             if isinstance(value, uuid.UUID):
                 converted[key] = str(value)
             elif isinstance(value, Decimal):
                 converted[key] = float(value)
+            elif isinstance(value, datetime):
+                converted[key] = value.isoformat()
+            elif isinstance(value, date):
+                converted[key] = value.isoformat()
             else:
                 converted[key] = value
         return converted

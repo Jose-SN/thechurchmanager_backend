@@ -13,6 +13,7 @@ from .mail import MailTemplateController
 from .classes import ClassController
 from .student import StudentController
 from .account import AccountController
+from .song import SongController
 
 __all__ = [
     "UserController", 
@@ -30,4 +31,5 @@ __all__ = [
     "ClassController",
     "StudentController",
     "AccountController",
+    "SongController",
     ]

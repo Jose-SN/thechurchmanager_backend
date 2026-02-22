@@ -2,6 +2,7 @@ from typing import List
 from fastapi import HTTPException
 import asyncpg
 import logging
+from datetime import datetime, date
 from app.api import dependencies
 from app.queries.student import (
     GET_STUDENTS_QUERY,
@@ -51,15 +52,27 @@ class StudentService:
             async with self.db_pool.acquire() as conn:
                 first_name = student_data.get('first_name', '')
                 last_name = student_data.get('last_name', '')
-                email = student_data.get('email')
-                phone = student_data.get('phone')
-                organization_id = dependencies.convert_objectid(student_data.get('organization_id'))
-                class_id = dependencies.convert_objectid(student_data.get('class_id'))
+                
+                date_of_birth_raw = student_data.get('date_of_birth')
+                date_of_birth = None
+                if date_of_birth_raw:
+                    if isinstance(date_of_birth_raw, str):
+                        date_of_birth = datetime.strptime(date_of_birth_raw, '%Y-%m-%d').date()
+                    elif isinstance(date_of_birth_raw, date):
+                        date_of_birth = date_of_birth_raw
+                
+                contact = student_data.get('contact', {})
+                email = contact.get('email') if isinstance(contact, dict) else student_data.get('email')
+                phone = contact.get('phone') if isinstance(contact, dict) else student_data.get('phone')
+                
+                organization_id = student_data.get('organization_id')
+                class_id = student_data.get('class_id')
                 
                 row = await conn.fetchrow(
                     INSERT_STUDENT_QUERY,
                     first_name,
                     last_name,
+                    date_of_birth,
                     email,
                     phone,
                     organization_id,
@@ -79,26 +92,40 @@ class StudentService:
         
         try:
             async with self.db_pool.acquire() as conn:
-                # Check if student exists
                 existing = await conn.fetchrow(GET_STUDENT_BY_ID_QUERY, student_id)
                 if not existing:
                     raise HTTPException(status_code=404, detail="Student not found")
                 
-                # Merge existing data with update data
                 merged_data = dict(existing)
                 merged_data.update(student_data)
                 
                 first_name = merged_data.get('first_name', '')
                 last_name = merged_data.get('last_name', '')
-                email = merged_data.get('email')
-                phone = merged_data.get('phone')
-                organization_id = dependencies.convert_objectid(merged_data.get('organization_id'))
-                class_id = dependencies.convert_objectid(merged_data.get('class_id'))
+                
+                date_of_birth_raw = merged_data.get('date_of_birth')
+                date_of_birth = None
+                if date_of_birth_raw:
+                    if isinstance(date_of_birth_raw, str):
+                        date_of_birth = datetime.strptime(date_of_birth_raw, '%Y-%m-%d').date()
+                    elif isinstance(date_of_birth_raw, date):
+                        date_of_birth = date_of_birth_raw
+                
+                contact = student_data.get('contact', {})
+                if isinstance(contact, dict) and contact:
+                    email = contact.get('email') or merged_data.get('email')
+                    phone = contact.get('phone') or merged_data.get('phone')
+                else:
+                    email = merged_data.get('email')
+                    phone = merged_data.get('phone')
+                
+                organization_id = merged_data.get('organization_id')
+                class_id = merged_data.get('class_id')
                 
                 row = await conn.fetchrow(
                     UPDATE_STUDENT_QUERY,
                     first_name,
                     last_name,
+                    date_of_birth,
                     email,
                     phone,
                     organization_id,

@@ -15,15 +15,15 @@ SELECT * FROM students WHERE class_id = $1
 """
 
 INSERT_STUDENT_QUERY = """
-INSERT INTO students (first_name, last_name, email, phone, organization_id, class_id, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+INSERT INTO students (first_name, last_name, date_of_birth, email, phone, organization_id, class_id, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 RETURNING *
 """
 
 UPDATE_STUDENT_QUERY = """
 UPDATE students
-SET first_name = $1, last_name = $2, email = $3, phone = $4, organization_id = $5, class_id = $6, updated_at = NOW()
-WHERE id = $6
+SET first_name = $1, last_name = $2, date_of_birth = $3, email = $4, phone = $5, organization_id = $6, class_id = $7, updated_at = NOW()
+WHERE id = $8
 RETURNING *
 """
 

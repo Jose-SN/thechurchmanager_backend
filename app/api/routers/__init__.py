@@ -18,6 +18,7 @@ from .mail import mail_template_router
 from .classes import class_router
 from .student import student_router
 from .account import account_router
+from .song import song_router
 from .health import router as health_router  # rename the file if needed
 
 router = APIRouter()
@@ -38,5 +39,6 @@ router.include_router(mail_template_router, prefix="/mail")
 router.include_router(class_router, prefix="/class")
 router.include_router(student_router, prefix="/student")
 router.include_router(account_router, prefix="/account")
+router.include_router(song_router, prefix="/song")
 router.include_router(root_router)
 

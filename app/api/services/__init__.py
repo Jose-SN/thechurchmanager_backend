@@ -13,6 +13,7 @@ from .mail import MailTemplateService
 from .classes import ClassService
 from .student import StudentService
 from .account import AccountService
+from .song import SongService
 
 __all__ = [
     "UserService", 
@@ -30,4 +31,5 @@ __all__ = [
     "ClassService",
     "StudentService",
     "AccountService",
+    "SongService",
 ]
