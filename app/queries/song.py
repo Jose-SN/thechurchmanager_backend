@@ -13,12 +13,6 @@ WHERE organization_id = $1
 ORDER BY created_at DESC
 """
 
-GET_SONGS_BY_CREATED_BY_QUERY = """
-SELECT * FROM songs 
-WHERE created_by = $1
-ORDER BY created_at DESC
-"""
-
 SEARCH_SONGS_QUERY = """
 SELECT * FROM songs
 WHERE organization_id = $1
@@ -42,11 +36,10 @@ INSERT INTO songs (
     rhythm,
     lyrics,
     organization_id,
-    created_by,
     created_at,
     updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()
+    $1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()
 )
 RETURNING *
 """

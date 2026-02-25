@@ -19,6 +19,8 @@ from .classes import class_router
 from .student import student_router
 from .account import account_router
 from .song import song_router
+from .rota import rota_router
+from .rota_song import rota_song_router
 from .health import router as health_router  # rename the file if needed
 
 router = APIRouter()
@@ -40,5 +42,7 @@ router.include_router(class_router, prefix="/class")
 router.include_router(student_router, prefix="/student")
 router.include_router(account_router, prefix="/account")
 router.include_router(song_router, prefix="/song")
+router.include_router(rota_router, prefix="/rota")
+router.include_router(rota_song_router, prefix="/rota-song")
 router.include_router(root_router)
 

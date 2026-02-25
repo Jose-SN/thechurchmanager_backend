@@ -14,6 +14,8 @@ from .classes import ClassService
 from .student import StudentService
 from .account import AccountService
 from .song import SongService
+from .rota import RotaService
+from .rota_song import RotaSongService
 
 __all__ = [
     "UserService", 
@@ -32,4 +34,6 @@ __all__ = [
     "StudentService",
     "AccountService",
     "SongService",
+    "RotaService",
+    "RotaSongService",
 ]

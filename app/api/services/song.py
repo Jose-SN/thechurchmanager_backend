@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from fastapi import HTTPException
 import asyncpg
 import logging
@@ -7,19 +7,20 @@ from app.queries.song import (
     GET_SONGS_QUERY,
     GET_SONG_BY_ID_QUERY,
     GET_SONGS_BY_ORGANIZATION_QUERY,
-    GET_SONGS_BY_CREATED_BY_QUERY,
     SEARCH_SONGS_QUERY,
     INSERT_SONG_QUERY,
     UPDATE_SONG_QUERY,
     DELETE_SONG_QUERY,
 )
 
+
 class SongService:
     def __init__(self, db_pool: asyncpg.Pool):
         self.db_pool = db_pool
 
-    async def get_song_data(self, filters: dict = {}) -> List[dict]:
+    async def get_song_data(self, filters: dict = None) -> List[dict]:
         """Get song data with filtering"""
+        filters = filters or {}
         try:
             async with self.db_pool.acquire() as conn:
                 if "id" in filters:
@@ -27,14 +28,7 @@ class SongService:
                     if song:
                         return [dependencies.convert_db_types(dict(song))]
                     return []
-                elif "created_by" in filters:
-                    rows = await conn.fetch(
-                        GET_SONGS_BY_CREATED_BY_QUERY,
-                        filters["created_by"]
-                    )
-                    return [dependencies.convert_db_types(dict(row)) for row in rows]
                 elif "organization_id" in filters:
-                    # Check if there are search filters
                     if any(key in filters for key in ["title", "artist", "scale", "tempo", "chords", "rhythm", "lyrics"]):
                         rows = await conn.fetch(
                             SEARCH_SONGS_QUERY,
@@ -53,7 +47,7 @@ class SongService:
                             filters["organization_id"]
                         )
                     return [dependencies.convert_db_types(dict(row)) for row in rows]
-                
+
                 rows = await conn.fetch(GET_SONGS_QUERY)
                 return [dependencies.convert_db_types(dict(row)) for row in rows]
         except Exception as e:
@@ -72,14 +66,17 @@ class SongService:
                 rhythm = song_data.get('rhythm')
                 lyrics = song_data.get('lyrics')
                 organization_id = song_data.get('organization_id')
-                created_by = song_data.get('created_by')
-                
-                # Validate required fields
+                if organization_id is not None:
+                    try:
+                        organization_id = int(organization_id)
+                    except (ValueError, TypeError):
+                        organization_id = None
+
                 if not organization_id:
                     raise HTTPException(status_code=400, detail="organization_id is required")
                 if not title:
                     raise HTTPException(status_code=400, detail="title is required and cannot be empty")
-                
+
                 row = await conn.fetchrow(
                     INSERT_SONG_QUERY,
                     title,
@@ -89,8 +86,7 @@ class SongService:
                     chords,
                     rhythm,
                     lyrics,
-                    organization_id,
-                    created_by
+                    organization_id
                 )
                 if row:
                     return dependencies.convert_db_types(dict(row))
@@ -101,29 +97,26 @@ class SongService:
             logging.error(f"❌ Error saving song data: {e}")
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
-    async def update_song_data(self, song_id: str, song_data: dict, organization_id: str) -> dict:
+    async def update_song_data(self, song_id: int, song_data: dict, organization_id: int) -> dict:
         """Update existing song"""
-        if not song_id:
+        if song_id is None:
             raise HTTPException(status_code=400, detail="Song ID is required")
-        
-        if not organization_id:
+
+        if organization_id is None:
             raise HTTPException(status_code=400, detail="organization_id is required")
-        
+
         try:
             async with self.db_pool.acquire() as conn:
-                # Check if song exists
                 existing = await conn.fetchrow(GET_SONG_BY_ID_QUERY, song_id)
                 if not existing:
                     raise HTTPException(status_code=404, detail="Song not found")
-                
-                # Verify organization ownership
-                if str(existing['organization_id']) != organization_id:
+
+                if int(existing['organization_id']) != int(organization_id):
                     raise HTTPException(status_code=403, detail="Not authorized to update this song")
-                
-                # Merge existing data with update data
+
                 merged_data = dict(existing)
                 merged_data.update(song_data)
-                
+
                 title = merged_data.get('title', '').strip()
                 artist = merged_data.get('artist')
                 scale = merged_data.get('scale')
@@ -131,11 +124,10 @@ class SongService:
                 chords = merged_data.get('chords')
                 rhythm = merged_data.get('rhythm')
                 lyrics = merged_data.get('lyrics')
-                
-                # Validate required fields
+
                 if not title:
                     raise HTTPException(status_code=400, detail="title is required and cannot be empty")
-                
+
                 row = await conn.fetchrow(
                     UPDATE_SONG_QUERY,
                     title,
@@ -157,21 +149,20 @@ class SongService:
             logging.error(f"❌ Error updating song data: {e}")
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
-    async def delete_song_data(self, song_id: str, organization_id: str) -> str:
+    async def delete_song_data(self, song_id: int, organization_id: int) -> str:
         """Delete song"""
-        if not organization_id:
+        if organization_id is None:
             raise HTTPException(status_code=400, detail="organization_id is required")
-        
+
         try:
             async with self.db_pool.acquire() as conn:
-                # Check if song exists and belongs to organization
                 existing = await conn.fetchrow(GET_SONG_BY_ID_QUERY, song_id)
                 if not existing:
                     raise HTTPException(status_code=404, detail="Song not found")
-                
-                if str(existing['organization_id']) != organization_id:
+
+                if int(existing['organization_id']) != int(organization_id):
                     raise HTTPException(status_code=403, detail="Not authorized to delete this song")
-                
+
                 result = await conn.execute(DELETE_SONG_QUERY, song_id, organization_id)
                 if result and result.startswith("DELETE 1"):
                     return ""

@@ -14,6 +14,8 @@ from .classes import ClassController
 from .student import StudentController
 from .account import AccountController
 from .song import SongController
+from .rota import RotaController
+from .rota_song import RotaSongController
 
 __all__ = [
     "UserController", 
@@ -32,4 +34,6 @@ __all__ = [
     "StudentController",
     "AccountController",
     "SongController",
+    "RotaController",
+    "RotaSongController",
     ]

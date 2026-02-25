@@ -1,43 +1,27 @@
 from fastapi import Request, HTTPException
-from fastapi.encoders import jsonable_encoder
 from app.api.services.song import SongService
 from fastapi.responses import JSONResponse
 import logging
-import uuid
 from datetime import datetime
+
 
 class SongController:
     def __init__(self, song_service: SongService):
         self.song_service = song_service
 
     def _format_response_data(self, data: dict) -> dict:
-        """Format response data: convert UUIDs to strings and format timestamps"""
+        """Format response data for JSON serialization"""
         formatted_data = data.copy()
-        
-        # Convert UUID objects to strings
+
         for key, value in formatted_data.items():
-            if isinstance(value, uuid.UUID):
-                formatted_data[key] = str(value)
-        
-        # Format timestamps to ISO format
-        timestamp_fields = ['created_at', 'updated_at']
-        for field in timestamp_fields:
-            if field in formatted_data and formatted_data[field]:
-                try:
-                    if isinstance(formatted_data[field], datetime):
-                        formatted_data[field] = formatted_data[field].isoformat()
-                    elif isinstance(formatted_data[field], str):
-                        try:
-                            dt = datetime.fromisoformat(formatted_data[field].replace('Z', '+00:00'))
-                            formatted_data[field] = dt.isoformat()
-                        except:
-                            pass
-                except:
-                    pass
-        
+            if isinstance(value, datetime):
+                formatted_data[key] = value.isoformat()
+            elif hasattr(value, 'isoformat'):
+                formatted_data[key] = value.isoformat()
+
         return formatted_data
 
-    async def fetch_song_controller(self, filters: dict = {}) -> JSONResponse:
+    async def fetch_song_controller(self, filters: dict = None) -> JSONResponse:
         """Get list of songs"""
         try:
             songs = await self.song_service.get_song_data(filters)
@@ -59,7 +43,7 @@ class SongController:
                 "error": {"message": "Failed to retrieve song data", "details": str(err)}
             })
 
-    async def get_song_by_id_controller(self, song_id: str) -> JSONResponse:
+    async def get_song_by_id_controller(self, song_id: int) -> JSONResponse:
         """Get a single song by ID"""
         try:
             filters = {"id": song_id}
@@ -93,7 +77,7 @@ class SongController:
                 "message": "Invalid JSON in request body",
                 "error": str(json_err)
             })
-        
+
         try:
             result = await self.song_service.save_song_data(body)
             formatted_result = self._format_response_data(dict(result))
@@ -115,7 +99,7 @@ class SongController:
                 "error": {"message": str(err)}
             })
 
-    async def update_song_controller(self, song_id: str, request: Request) -> JSONResponse:
+    async def update_song_controller(self, song_id: int, request: Request) -> JSONResponse:
         """Update an existing song"""
         try:
             body = await request.json()
@@ -125,16 +109,24 @@ class SongController:
                 "message": "Invalid JSON in request body",
                 "error": str(json_err)
             })
-        
+
         try:
             organization_id = body.pop('organization_id', None)
-            if not organization_id:
+            if organization_id is None:
                 return JSONResponse(status_code=400, content={
                     "success": False,
                     "error": {"message": "organization_id is required"}
                 })
-            
-            result = await self.song_service.update_song_data(song_id, body, organization_id)
+
+            try:
+                org_id = int(organization_id)
+            except (ValueError, TypeError):
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "error": {"message": "organization_id must be a valid integer"}
+                })
+
+            result = await self.song_service.update_song_data(song_id, body, org_id)
             formatted_result = self._format_response_data(dict(result))
             return JSONResponse(status_code=200, content={
                 "success": True,
@@ -154,16 +146,24 @@ class SongController:
                 "error": {"message": str(err)}
             })
 
-    async def delete_song_controller(self, song_id: str, organization_id: str) -> JSONResponse:
+    async def delete_song_controller(self, song_id: int, organization_id: int) -> JSONResponse:
         """Delete a song"""
         try:
-            if not organization_id:
+            if organization_id is None:
                 return JSONResponse(status_code=400, content={
                     "success": False,
                     "error": {"message": "organization_id is required"}
                 })
-            
-            await self.song_service.delete_song_data(song_id, organization_id)
+
+            try:
+                org_id = int(organization_id)
+            except (ValueError, TypeError):
+                return JSONResponse(status_code=400, content={
+                    "success": False,
+                    "error": {"message": "organization_id must be a valid integer"}
+                })
+
+            await self.song_service.delete_song_data(song_id, org_id)
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Song deleted successfully"
