@@ -16,6 +16,7 @@ from .account import AccountController
 from .song import SongController
 from .rota import RotaController
 from .rota_song import RotaSongController
+from .expense import ExpenseController
 
 __all__ = [
     "UserController", 
@@ -36,4 +37,5 @@ __all__ = [
     "SongController",
     "RotaController",
     "RotaSongController",
+    "ExpenseController",
     ]

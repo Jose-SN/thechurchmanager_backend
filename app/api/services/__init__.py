@@ -16,6 +16,7 @@ from .account import AccountService
 from .song import SongService
 from .rota import RotaService
 from .rota_song import RotaSongService
+from .expense import ExpenseService
 
 __all__ = [
     "UserService", 
@@ -36,4 +37,5 @@ __all__ = [
     "SongService",
     "RotaService",
     "RotaSongService",
+    "ExpenseService",
 ]
