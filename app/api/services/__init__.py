@@ -17,6 +17,10 @@ from .song import SongService
 from .rota import RotaService
 from .rota_song import RotaSongService
 from .expense import ExpenseService
+from .checklist_template import ChecklistTemplateService
+from .checklist_item import ChecklistItemService
+from .checklist_record import ChecklistRecordService
+from .checklist_item_status import ChecklistItemStatusService
 
 __all__ = [
     "UserService", 
@@ -38,4 +42,8 @@ __all__ = [
     "RotaService",
     "RotaSongService",
     "ExpenseService",
+    "ChecklistTemplateService",
+    "ChecklistItemService",
+    "ChecklistRecordService",
+    "ChecklistItemStatusService",
 ]

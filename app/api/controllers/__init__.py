@@ -17,6 +17,10 @@ from .song import SongController
 from .rota import RotaController
 from .rota_song import RotaSongController
 from .expense import ExpenseController
+from .checklist_template import ChecklistTemplateController
+from .checklist_item import ChecklistItemController
+from .checklist_record import ChecklistRecordController
+from .checklist_item_status import ChecklistItemStatusController
 
 __all__ = [
     "UserController", 
@@ -38,4 +42,8 @@ __all__ = [
     "RotaController",
     "RotaSongController",
     "ExpenseController",
+    "ChecklistTemplateController",
+    "ChecklistItemController",
+    "ChecklistRecordController",
+    "ChecklistItemStatusController",
     ]
