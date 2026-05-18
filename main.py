@@ -18,15 +18,7 @@ app = FastAPI(title="The Church Manager")
 # Note: When allow_credentials=True, you cannot use "*" as a wildcard
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "http://thechurchmanager.com", 
-        "https://thechurchmanager.com", 
-        "http://www.thechurchmanager.com", 
-        "https://www.thechurchmanager.com",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
