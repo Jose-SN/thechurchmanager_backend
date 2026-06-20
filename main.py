@@ -8,11 +8,12 @@ import uvicorn
 import os
 
 from app.db.mongodb import connect_db
-from app.db.postgresql import get_connection
+from app.db.postgresql import close_postgresql, get_connection
 from app.db.session import init_sqlalchemy, close_sqlalchemy
 from app.api.routers import router  # Assuming routers/__init__.py
 from app.api.websocket import websocket_endpoint
 from app.utils.mail import test_smtp_connection
+from app.core.config import settings
 
 app = FastAPI(title="The Church Manager")
 
@@ -53,7 +54,12 @@ app.mount("/public", StaticFiles(directory=PUBLIC_DIR), name="public")
 
 @app.on_event("startup")
 async def startup_event():
-    app.state.db = await get_connection()
+    if not settings.is_postgresql_configured():
+        logging.error(
+            "PostgreSQL environment variables are missing in this runtime. %s",
+            "Set POSTGRESQL_DB_* or DATABASE_URL in App Runner / container env.",
+        )
+    app.state.db = await get_connection(retries=5, delay_seconds=2.0)
     await init_sqlalchemy()
     # Test Gmail SMTP connection at startup (non-blocking - app will start even if this fails)
     try:
@@ -66,6 +72,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_sqlalchemy()
+    await close_postgresql()
 
 app.include_router(router)
 

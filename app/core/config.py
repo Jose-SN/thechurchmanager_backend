@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
+from urllib.parse import urlparse, unquote
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     SES_FROM_EMAIL: str = Field(default='', validation_alias='SES_FROM_EMAIL')
     
     # PostgreSQL settings
+    DATABASE_URL: str = Field(default='', validation_alias='DATABASE_URL')
     POSTGRESQL_DB_HOST: str = Field(default='localhost', validation_alias='POSTGRESQL_DB_HOST')
     POSTGRESQL_DB_PORT: int = Field(default=5432, validation_alias='POSTGRESQL_DB_PORT')
     POSTGRESQL_DB_USER: str = Field(default='', validation_alias='POSTGRESQL_DB_USER')
@@ -40,6 +42,31 @@ class Settings(BaseSettings):
         env_file_encoding='utf-8',
         extra="ignore"
     )
+
+    @model_validator(mode='after')
+    def apply_database_url(self):
+        if not self.DATABASE_URL:
+            return self
+        parsed = urlparse(self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://", 1))
+        if parsed.hostname:
+            self.POSTGRESQL_DB_HOST = parsed.hostname
+        if parsed.port:
+            self.POSTGRESQL_DB_PORT = parsed.port
+        if parsed.username:
+            self.POSTGRESQL_DB_USER = unquote(parsed.username)
+        if parsed.password:
+            self.POSTGRESQL_DB_PASSWORD = unquote(parsed.password)
+        if parsed.path and parsed.path != "/":
+            self.POSTGRESQL_DB_NAME = parsed.path.lstrip("/")
+        return self
+
+    def is_postgresql_configured(self) -> bool:
+        return bool(
+            self.POSTGRESQL_DB_HOST
+            and self.POSTGRESQL_DB_USER
+            and self.POSTGRESQL_DB_PASSWORD
+            and self.POSTGRESQL_DB_NAME
+        )
 
     @field_validator('PORT', 'MONGO_URI')
     @classmethod
