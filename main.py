@@ -45,7 +45,9 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # Static files (equivalent to express.static)
-app.mount("/public", StaticFiles(directory="public"), name="public")
+PUBLIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public")
+os.makedirs(PUBLIC_DIR, exist_ok=True)
+app.mount("/public", StaticFiles(directory=PUBLIC_DIR), name="public")
 
 
 
