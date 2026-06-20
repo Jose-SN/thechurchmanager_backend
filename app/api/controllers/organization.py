@@ -30,12 +30,28 @@ class OrganizationController:
             return JSONResponse(status_code=200, content={
                 "success": True,
                 "message": "Successfully added",
-                "data": response
+                "data": jsonable_encoder(response)
             })
         except Exception as err:
             return JSONResponse(status_code=400, content={
                 "success": False,
                 "message": "Save failed",
+                "error": str(err)
+            })
+
+    async def sync_organization_controller(self, request: Request):
+        body = await request.json()
+        try:
+            response = await self.organization_service.sync_organization_data(body)
+            return JSONResponse(status_code=200, content={
+                "success": True,
+                "message": "Organization synced successfully",
+                "data": jsonable_encoder(response)
+            })
+        except Exception as err:
+            return JSONResponse(status_code=400, content={
+                "success": False,
+                "message": "Sync failed",
                 "error": str(err)
             })
     async def save_bulk_organization_controller(self, request: Request):
@@ -60,8 +76,7 @@ class OrganizationController:
             password = body.get("password")
             result = await self.organization_service.login_organization_data(email, password)
             if result:
-                result = dependencies.convert_objectid(result)
-                result = jsonable_encoder(result)  # <-- ensures datetime is serializable
+                result = jsonable_encoder(result)
             else:
                 result = {}
             return JSONResponse(status_code=200, content={

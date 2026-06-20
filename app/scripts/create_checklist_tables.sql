@@ -5,6 +5,7 @@
 -- Checklist templates (one per team)
 CREATE TABLE IF NOT EXISTS checklist_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL,
   team_id UUID NOT NULL REFERENCES teams(id),
   name VARCHAR(255) NOT NULL,
   description TEXT,
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS checklist_templates (
 );
 
 CREATE INDEX IF NOT EXISTS idx_checklist_templates_team_id ON checklist_templates(team_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_templates_organization_id ON checklist_templates(organization_id);
 
 -- Checklist items (lines within a template)
 CREATE TABLE IF NOT EXISTS checklist_items (
@@ -33,6 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_checklist_items_template_id ON checklist_items(te
 -- Checklist records (one completed checklist per date/template/team)
 CREATE TABLE IF NOT EXISTS checklist_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL,
   template_id UUID NOT NULL REFERENCES checklist_templates(id),
   team_id UUID NOT NULL,
   date DATE NOT NULL,
@@ -40,10 +43,11 @@ CREATE TABLE IF NOT EXISTS checklist_records (
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(template_id, team_id, date)
+  UNIQUE(organization_id, template_id, team_id, date)
 );
 
 CREATE INDEX IF NOT EXISTS idx_checklist_records_date ON checklist_records(date);
+CREATE INDEX IF NOT EXISTS idx_checklist_records_organization_id ON checklist_records(organization_id);
 CREATE INDEX IF NOT EXISTS idx_checklist_records_team ON checklist_records(team_id);
 CREATE INDEX IF NOT EXISTS idx_checklist_records_template ON checklist_records(template_id);
 CREATE INDEX IF NOT EXISTS idx_checklist_records_completed_by ON checklist_records(completed_by);

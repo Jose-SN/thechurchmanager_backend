@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -8,20 +9,27 @@ import os
 
 from app.db.mongodb import connect_db
 from app.db.postgresql import get_connection
+from app.db.session import init_sqlalchemy, close_sqlalchemy
 from app.api.routers import router  # Assuming routers/__init__.py
 from app.api.websocket import websocket_endpoint
 from app.utils.mail import test_smtp_connection
 
 app = FastAPI(title="The Church Manager")
 
-# CORS (allow frontend origin)
-# Note: When allow_credentials=True, you cannot use "*" as a wildcard
+# CORS — explicit dev origins (wildcard + credentials is invalid in browsers)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "https://thechurchmanager.com",
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "X-Organization-Id"],
     expose_headers=["*"],
 )
 
@@ -44,12 +52,18 @@ app.mount("/public", StaticFiles(directory="public"), name="public")
 @app.on_event("startup")
 async def startup_event():
     app.state.db = await get_connection()
+    await init_sqlalchemy()
     # Test Gmail SMTP connection at startup (non-blocking - app will start even if this fails)
     try:
         test_smtp_connection()
     except Exception as e:
         logging.warning(f"⚠️ Gmail SMTP test failed, but continuing startup: {e}")
         print(f"⚠️ Gmail SMTP test failed, but continuing startup: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_sqlalchemy()
 
 app.include_router(router)
 

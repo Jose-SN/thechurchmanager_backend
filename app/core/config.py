@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     POSTGRESQL_SSL_MODE: str = Field(default='prefer', validation_alias='POSTGRESQL_SSL_MODE')
     POSTGRESQL_SSL_REJECT_UNAUTHORIZED: bool = Field(default=False, validation_alias='POSTGRESQL_SSL_REJECT_UNAUTHORIZED')
 
+    # IAM handled by separate service — disable local JWT gate until wired up
+    IAM_AUTH_ENABLED: bool = Field(default=False, validation_alias='IAM_AUTH_ENABLED')
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding='utf-8',

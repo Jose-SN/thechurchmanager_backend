@@ -27,6 +27,10 @@ async def get_all_organizations(
 async def save_organization(request: Request, organization_controller: OrganizationController = Depends(get_organization_controller)):
     return await organization_controller.save_organization_controller(request)
 
+@organization_router.post("/sync")
+async def sync_organization(request: Request, organization_controller: OrganizationController = Depends(get_organization_controller)):
+    return await organization_controller.sync_organization_controller(request)
+
 @organization_router.post("/login")
 async def login_organization(request: Request, organization_controller: OrganizationController = Depends(get_organization_controller)):
     return await organization_controller.login_organization_controller(request)

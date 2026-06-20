@@ -1,91 +1,221 @@
 from datetime import datetime, timedelta
-from unittest import result
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
-from uvicorn import Config
+import json
+import logging
+
+import asyncpg
 from fastapi import HTTPException
-from bson import ObjectId
-from pymongo import ReturnDocument
 
 from app.api import dependencies
 from app.core.config import settings
+from app.queries.organization import (
+    GET_ORGANIZATIONS_QUERY,
+    GET_ORGANIZATION_BY_ID_QUERY,
+    GET_ORGANIZATION_BY_EMAIL_QUERY,
+    GET_ORGANIZATION_BY_SUPABASE_USER_ID_QUERY,
+    INSERT_ORGANIZATION_QUERY,
+    UPDATE_ORGANIZATION_QUERY,
+    DELETE_ORGANIZATION_QUERY,
+)
+
 
 class OrganizationService:
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.db = db
-        self.organizations = db["organizations"]
+    def __init__(self, db_pool: asyncpg.Pool):
+        self.db_pool = db_pool
+
+    def _to_json(self, value, default):
+        if value is None:
+            return json.dumps(default)
+        if isinstance(value, (list, dict)):
+            return json.dumps(value)
+        return value
+
+    def _extract_fields(self, organization_data: dict) -> dict:
+        contact = organization_data.get("contact") or {}
+        if not isinstance(contact, dict):
+            contact = {}
+
+        return {
+            "name": organization_data.get("name", ""),
+            "title": organization_data.get("title", ""),
+            "contact": self._to_json(contact, {}),
+            "leadership": self._to_json(organization_data.get("leadership", []), []),
+            "social": self._to_json(organization_data.get("social", {}), {}),
+            "volunteers": self._to_json(organization_data.get("volunteers", []), []),
+            "additional_information": self._to_json(
+                organization_data.get("additional_information", {}), {}
+            ),
+            "profile_image": organization_data.get("profile_image"),
+            "about": organization_data.get("about", ""),
+            "members": self._to_json(organization_data.get("members", []), []),
+            "password": organization_data.get("password"),
+        }
+
+    async def _find_existing(self, conn, organization_data: dict):
+        organization_id = organization_data.get("id")
+        if organization_id:
+            row = await conn.fetchrow(GET_ORGANIZATION_BY_ID_QUERY, organization_id)
+            if row:
+                return row
+
+        contact = organization_data.get("contact") or {}
+        email = contact.get("email") if isinstance(contact, dict) else None
+        if email:
+            row = await conn.fetchrow(GET_ORGANIZATION_BY_EMAIL_QUERY, email)
+            if row:
+                return row
+
+        additional_information = organization_data.get("additional_information") or {}
+        supabase_user_id = (
+            additional_information.get("supabase_user_id")
+            if isinstance(additional_information, dict)
+            else None
+        )
+        if supabase_user_id:
+            row = await conn.fetchrow(
+                GET_ORGANIZATION_BY_SUPABASE_USER_ID_QUERY, supabase_user_id
+            )
+            if row:
+                return row
+
+        return None
 
     async def get_organization_data(self, filters: dict = {}) -> List[dict]:
-        query = {}
-        if filters:
-            query = filters.copy()
-            if "id" in query:
-                try:
-                    query["id"] = ObjectId(query["id"])
-                except Exception:
-                    # Invalid ObjectId, will return empty result
+        try:
+            async with self.db_pool.acquire() as conn:
+                if "id" in filters:
+                    row = await conn.fetchrow(GET_ORGANIZATION_BY_ID_QUERY, filters["id"])
+                    if row:
+                        return [dependencies.convert_db_types(dict(row))]
                     return []
-        organizations = await self.organizations.find(query).to_list(length=None)
-        for org in organizations:
-            if "id" in org:
-                org["id"] = str(org["id"])
-        return organizations
+                rows = await conn.fetch(GET_ORGANIZATIONS_QUERY)
+                return [dependencies.convert_db_types(dict(row)) for row in rows]
+        except Exception as e:
+            logging.error(f"Error fetching organization data: {e}")
+            raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
-    async def save_organization_data(self, organization_data: dict):
-        # Hash password before save
-        # if "password" in organization_data and organization_data["password"]:
-        #     organization_data["password"] = pwd_context.hash(organization_data["password"])
+    async def save_organization_data(self, organization_data: dict) -> dict:
+        try:
+            fields = self._extract_fields(organization_data)
+            async with self.db_pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    INSERT_ORGANIZATION_QUERY,
+                    fields["name"],
+                    fields["title"],
+                    fields["contact"],
+                    fields["leadership"],
+                    fields["social"],
+                    fields["volunteers"],
+                    fields["additional_information"],
+                    fields["profile_image"],
+                    fields["about"],
+                    fields["members"],
+                    fields["password"],
+                )
+                return dependencies.convert_db_types(dict(row)) if row else {}
+        except Exception as e:
+            logging.error(f"Error saving organization data: {e}")
+            raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
-            result = await self.organizations.insert_one(organization_data)
-            organization = await self.organizations.find_one({"id": result.inserted_id})
-            if organization:
-                organization = dependencies.convert_objectid(organization)
-            else:
-                organization = {}
-            return organization
-    
-    
+    async def sync_organization_data(self, organization_data: dict) -> dict:
+        """Create or update an organization from auth signup/login payload."""
+        try:
+            fields = self._extract_fields(organization_data)
+            async with self.db_pool.acquire() as conn:
+                existing = await self._find_existing(conn, organization_data)
+                if existing:
+                    row = await conn.fetchrow(
+                        UPDATE_ORGANIZATION_QUERY,
+                        fields["name"],
+                        fields["title"],
+                        fields["contact"],
+                        fields["leadership"],
+                        fields["social"],
+                        fields["volunteers"],
+                        fields["additional_information"],
+                        fields["profile_image"],
+                        fields["about"],
+                        fields["members"],
+                        fields["password"],
+                        existing["id"],
+                    )
+                else:
+                    row = await conn.fetchrow(
+                        INSERT_ORGANIZATION_QUERY,
+                        fields["name"],
+                        fields["title"],
+                        fields["contact"],
+                        fields["leadership"],
+                        fields["social"],
+                        fields["volunteers"],
+                        fields["additional_information"],
+                        fields["profile_image"],
+                        fields["about"],
+                        fields["members"],
+                        fields["password"],
+                    )
+                return dependencies.convert_db_types(dict(row)) if row else {}
+        except HTTPException:
+            raise
+        except Exception as e:
+            logging.error(f"Error syncing organization data: {e}")
+            raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
+
     async def save_bulk_organization_data(self, organizations_data: list[dict]) -> list[dict]:
-        """
-        Bulk insert organizations and return the inserted organization documents.
-        """
-        result = await self.organizations.insert_many(organizations_data)
-        inserted_ids = result.inserted_ids
-        organizations = await self.organizations.find({"id": {"$in": inserted_ids}}).to_list(length=len(inserted_ids))
-        return organizations
-
+        saved = []
+        for organization in organizations_data:
+            saved.append(await self.sync_organization_data(organization))
+        return saved
 
     async def login_organization_data(self, email: str, password: str):
-        organization = await self.organizations.find_one({"contact.email": email})
-        if not organization:
-            raise ValueError("No matching records found")
-        # hashed_password = organization.get("password")
-        # if not hashed_password or not pwd_context.verify(password, hashed_password):
-        #     raise ValueError("Invalid credentials")
-        return await self.generate_authorized_organization(organization)
+        try:
+            async with self.db_pool.acquire() as conn:
+                organization = await conn.fetchrow(GET_ORGANIZATION_BY_EMAIL_QUERY, email)
+                if not organization:
+                    raise ValueError("No matching records found")
+                return await self.generate_authorized_organization(dict(organization))
+        except ValueError:
+            raise
+        except Exception as e:
+            logging.error(f"Error logging in organization: {e}")
+            raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
     async def generate_authorized_organization(self, login_organization: dict):
         payload = self.get_jwt_payload(login_organization)
         expiry_seconds = dependencies.parse_expiry_to_seconds(settings.JWT_EXPIRY)
         payload["exp"] = datetime.utcnow() + timedelta(seconds=expiry_seconds)
-        token = 'thechurchmanager'  # jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
-        payload["jwt"] = token
+        payload["jwt"] = "thechurchmanager"
         return payload
 
     def get_jwt_payload(self, login_organization: dict) -> dict:
-        # Compose nested social and contact objects
+        contact_raw = login_organization.get("contact") or {}
+        if isinstance(contact_raw, str):
+            try:
+                contact_raw = json.loads(contact_raw)
+            except json.JSONDecodeError:
+                contact_raw = {}
+
+        social_raw = login_organization.get("social") or {}
+        if isinstance(social_raw, str):
+            try:
+                social_raw = json.loads(social_raw)
+            except json.JSONDecodeError:
+                social_raw = {}
+
         social = {
-            "facebook": login_organization.get("social", {}).get("facebook") or login_organization.get("facebook"),
-            "instagram": login_organization.get("social", {}).get("instagram") or login_organization.get("instagram"),
-            "youtube": login_organization.get("social", {}).get("youtube") or login_organization.get("youtube"),
-            "twitter": login_organization.get("social", {}).get("twitter") or login_organization.get("twitter"),
+            "facebook": social_raw.get("facebook") or login_organization.get("facebook"),
+            "instagram": social_raw.get("instagram") or login_organization.get("instagram"),
+            "youtube": social_raw.get("youtube") or login_organization.get("youtube"),
+            "twitter": social_raw.get("twitter") or login_organization.get("twitter"),
         }
         contact = {
-            "phone": login_organization.get("contact", {}).get("phone") or login_organization.get("phone_number") or login_organization.get("phone"),
-            "email": login_organization.get("contact", {}).get("email") or login_organization.get("email"),
-            "website": login_organization.get("contact", {}).get("website") or login_organization.get("website"),
-            "address": login_organization.get("contact", {}).get("address") or login_organization.get("address"),
-            "officeHours": login_organization.get("contact", {}).get("officeHours"),
+            "phone": contact_raw.get("phone")
+            or login_organization.get("phone_number")
+            or login_organization.get("phone"),
+            "email": contact_raw.get("email") or login_organization.get("email"),
+            "website": contact_raw.get("website") or login_organization.get("website"),
+            "address": contact_raw.get("address") or login_organization.get("address"),
+            "officeHours": contact_raw.get("officeHours"),
         }
         return {
             "id": str(login_organization.get("id")),
@@ -101,26 +231,45 @@ class OrganizationService:
             "password": login_organization.get("password"),
         }
 
-
-
     async def update_organization_data(self, organization_data: dict) -> dict:
+        organization_id = organization_data.get("id")
+        if not organization_id:
+            raise HTTPException(status_code=400, detail="Organization ID is required")
+
         try:
-            organization_id = organization_data.get("id")
-            update_fields = organization_data.copy()
-            update_fields.pop("id", None)
-            update_result = await self.organizations.find_one_and_update(
-                {"id": dependencies.try_objectid(organization_id)},
-                {"$set": update_fields},
-                return_document=ReturnDocument.AFTER
-            )
-            if not update_result:
-                raise ValueError("Organization not found")
-            return update_result
+            fields = self._extract_fields(organization_data)
+            async with self.db_pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    UPDATE_ORGANIZATION_QUERY,
+                    fields["name"],
+                    fields["title"],
+                    fields["contact"],
+                    fields["leadership"],
+                    fields["social"],
+                    fields["volunteers"],
+                    fields["additional_information"],
+                    fields["profile_image"],
+                    fields["about"],
+                    fields["members"],
+                    fields["password"],
+                    organization_id,
+                )
+                if not row:
+                    raise ValueError("Organization not found")
+                return dependencies.convert_db_types(dict(row))
+        except ValueError as err:
+            return {"success": False, "error": str(err)}
         except Exception as err:
+            logging.error(f"Error updating organization data: {err}")
             return {"success": False, "error": str(err)}
 
     async def delete_organization_data(self, organization_id: str) -> str:
-        if not ObjectId.is_valid(organization_id):
-            raise HTTPException(status_code=400, detail="Invalid organization ID")
-        result = await self.organizations.find_one_and_delete({"id": str(organization_id)})
-        return "" if result else "Organization not found"
+        try:
+            async with self.db_pool.acquire() as conn:
+                result = await conn.execute(DELETE_ORGANIZATION_QUERY, organization_id)
+                if result and result.startswith("DELETE"):
+                    return ""
+                return "Organization not found"
+        except Exception as e:
+            logging.error(f"Error deleting organization data: {e}")
+            raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
