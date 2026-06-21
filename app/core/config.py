@@ -47,7 +47,12 @@ class Settings(BaseSettings):
     def apply_database_url(self):
         if not self.DATABASE_URL:
             return self
-        parsed = urlparse(self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://", 1))
+        raw = self.DATABASE_URL.strip()
+        for prefix in ("postgresql+asyncpg://", "postgresql+psycopg2://", "postgresql://", "postgres://"):
+            if raw.startswith(prefix):
+                raw = "postgresql://" + raw[len(prefix):]
+                break
+        parsed = urlparse(raw)
         if parsed.hostname:
             self.POSTGRESQL_DB_HOST = parsed.hostname
         if parsed.port:
@@ -58,15 +63,62 @@ class Settings(BaseSettings):
             self.POSTGRESQL_DB_PASSWORD = unquote(parsed.password)
         if parsed.path and parsed.path != "/":
             self.POSTGRESQL_DB_NAME = parsed.path.lstrip("/")
+        if parsed.hostname and "supabase.com" in parsed.hostname:
+            self.POSTGRESQL_SSL_MODE = "require"
         return self
 
     def is_postgresql_configured(self) -> bool:
+        if self.DATABASE_URL.strip():
+            return True
         return bool(
             self.POSTGRESQL_DB_HOST
             and self.POSTGRESQL_DB_USER
             and self.POSTGRESQL_DB_PASSWORD
             and self.POSTGRESQL_DB_NAME
         )
+
+    def get_sqlalchemy_async_url(self) -> str:
+        if self.DATABASE_URL.strip():
+            url = self.DATABASE_URL.strip()
+            if url.startswith("postgresql+asyncpg://"):
+                return url
+            if url.startswith("postgres://"):
+                return url.replace("postgres://", "postgresql+asyncpg://", 1)
+            if url.startswith("postgresql://"):
+                return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return url
+        return (
+            f"postgresql+asyncpg://{self.POSTGRESQL_DB_USER}:"
+            f"{self.POSTGRESQL_DB_PASSWORD}@{self.POSTGRESQL_DB_HOST}:"
+            f"{self.POSTGRESQL_DB_PORT}/{self.POSTGRESQL_DB_NAME}"
+        )
+
+    def get_sqlalchemy_sync_url(self) -> str:
+        if self.DATABASE_URL.strip():
+            url = self.DATABASE_URL.strip()
+            if url.startswith("postgresql+psycopg2://"):
+                return url
+            if url.startswith("postgresql+asyncpg://"):
+                return url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+            if url.startswith("postgres://"):
+                return url.replace("postgres://", "postgresql+psycopg2://", 1)
+            if url.startswith("postgresql://"):
+                return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            return url
+        return (
+            f"postgresql+psycopg2://{self.POSTGRESQL_DB_USER}:"
+            f"{self.POSTGRESQL_DB_PASSWORD}@{self.POSTGRESQL_DB_HOST}:"
+            f"{self.POSTGRESQL_DB_PORT}/{self.POSTGRESQL_DB_NAME}"
+        )
+
+    def get_asyncpg_connect_kwargs(self) -> dict:
+        return {
+            "host": self.POSTGRESQL_DB_HOST,
+            "port": self.POSTGRESQL_DB_PORT,
+            "user": self.POSTGRESQL_DB_USER,
+            "password": self.POSTGRESQL_DB_PASSWORD,
+            "database": self.POSTGRESQL_DB_NAME,
+        }
 
     @field_validator('PORT', 'MONGO_URI')
     @classmethod

@@ -8,10 +8,8 @@ from app.core.config import settings
 pool = None
 
 POSTGRESQL_CONFIG_HELP = (
-    "Configure PostgreSQL via environment variables: "
-    "POSTGRESQL_DB_HOST, POSTGRESQL_DB_PORT, POSTGRESQL_DB_NAME, "
-    "POSTGRESQL_DB_USER, POSTGRESQL_DB_PASSWORD, POSTGRESQL_SSL_MODE=require "
-    "(or set DATABASE_URL)."
+    "Configure PostgreSQL via DATABASE_URL "
+    "(recommended for Supabase) or POSTGRESQL_DB_* variables."
 )
 
 
@@ -39,29 +37,26 @@ async def connect_postgresql(*, retries: int = 5, delay_seconds: float = 2.0):
         raise RuntimeError(message)
 
     ssl_config = _build_ssl_config()
+    connect_kwargs = settings.get_asyncpg_connect_kwargs()
     last_error = None
 
     for attempt in range(1, retries + 1):
         try:
             pool = await asyncpg.create_pool(
-                host=settings.POSTGRESQL_DB_HOST,
-                port=settings.POSTGRESQL_DB_PORT,
-                user=settings.POSTGRESQL_DB_USER,
-                password=settings.POSTGRESQL_DB_PASSWORD,
-                database=settings.POSTGRESQL_DB_NAME,
+                **connect_kwargs,
                 ssl=ssl_config,
                 min_size=1,
                 max_size=10,
             )
             logging.info(
                 "PostgreSQL connected to %s:%s/%s",
-                settings.POSTGRESQL_DB_HOST,
-                settings.POSTGRESQL_DB_PORT,
-                settings.POSTGRESQL_DB_NAME,
+                connect_kwargs["host"],
+                connect_kwargs["port"],
+                connect_kwargs["database"],
             )
             print(
-                f"PostgreSQL connected to {settings.POSTGRESQL_DB_HOST}:"
-                f"{settings.POSTGRESQL_DB_PORT}/{settings.POSTGRESQL_DB_NAME}"
+                f"PostgreSQL connected to {connect_kwargs['host']}:"
+                f"{connect_kwargs['port']}/{connect_kwargs['database']}"
             )
             return pool
         except Exception as exc:
@@ -77,8 +72,8 @@ async def connect_postgresql(*, retries: int = 5, delay_seconds: float = 2.0):
 
     message = (
         f"PostgreSQL connection failed after {retries} attempts to "
-        f"{settings.POSTGRESQL_DB_HOST}:{settings.POSTGRESQL_DB_PORT}/"
-        f"{settings.POSTGRESQL_DB_NAME}: {last_error}. {POSTGRESQL_CONFIG_HELP}"
+        f"{connect_kwargs['host']}:{connect_kwargs['port']}/"
+        f"{connect_kwargs['database']}: {last_error}. {POSTGRESQL_CONFIG_HELP}"
     )
     logging.error(message)
     raise RuntimeError(message) from last_error

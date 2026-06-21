@@ -9,15 +9,6 @@ _engine = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
-def _build_database_url() -> str:
-    user = settings.POSTGRESQL_DB_USER
-    password = settings.POSTGRESQL_DB_PASSWORD
-    host = settings.POSTGRESQL_DB_HOST
-    port = settings.POSTGRESQL_DB_PORT
-    name = settings.POSTGRESQL_DB_NAME
-    return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{name}"
-
-
 def _build_connect_args() -> dict:
     if settings.POSTGRESQL_SSL_MODE in ("require", "prefer"):
         ctx = ssl.create_default_context()
@@ -32,7 +23,7 @@ def get_engine():
     global _engine
     if _engine is None:
         _engine = create_async_engine(
-            _build_database_url(),
+            settings.get_sqlalchemy_async_url(),
             connect_args=_build_connect_args(),
             pool_pre_ping=True,
             echo=False,

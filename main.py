@@ -56,8 +56,8 @@ app.mount("/public", StaticFiles(directory=PUBLIC_DIR), name="public")
 async def startup_event():
     if not settings.is_postgresql_configured():
         logging.error(
-            "PostgreSQL environment variables are missing in this runtime. %s",
-            "Set POSTGRESQL_DB_* or DATABASE_URL in App Runner / container env.",
+            "PostgreSQL environment variables are missing in this runtime. "
+            "Set DATABASE_URL (recommended) or POSTGRESQL_DB_* in App Runner / container env.",
         )
     app.state.db = await get_connection(retries=5, delay_seconds=2.0)
     await init_sqlalchemy()

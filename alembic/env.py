@@ -20,11 +20,7 @@ target_metadata = Base.metadata
 
 
 def get_url() -> str:
-    return (
-        f"postgresql+psycopg2://{settings.POSTGRESQL_DB_USER}:"
-        f"{settings.POSTGRESQL_DB_PASSWORD}@{settings.POSTGRESQL_DB_HOST}:"
-        f"{settings.POSTGRESQL_DB_PORT}/{settings.POSTGRESQL_DB_NAME}"
-    )
+    return settings.get_sqlalchemy_sync_url()
 
 
 def run_migrations_offline() -> None:

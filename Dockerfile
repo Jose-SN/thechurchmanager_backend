@@ -33,13 +33,8 @@ ENV S3_BUCKET_NAME=betrack
 ENV AWS_REGION=eu-west-2
 
 # PostgreSQL — REQUIRED at runtime (App Runner env vars or secrets manager).
-# Do not rely on .env inside the container; it is excluded from Docker builds.
-# POSTGRESQL_DB_HOST=
-# POSTGRESQL_DB_PORT=5432
-# POSTGRESQL_DB_NAME=postgres
-# POSTGRESQL_DB_USER=postgres
-# POSTGRESQL_DB_PASSWORD=
-# POSTGRESQL_SSL_MODE=require
+# Recommended: set DATABASE_URL to your Supabase pooler URL.
+# DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres
 
 # Expose port (App Runner expects your app to listen on 8080)
 EXPOSE 8080
