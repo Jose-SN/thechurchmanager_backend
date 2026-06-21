@@ -47,6 +47,8 @@ async def connect_postgresql(*, retries: int = 5, delay_seconds: float = 2.0):
                 ssl=ssl_config,
                 min_size=1,
                 max_size=10,
+                timeout=15,
+                command_timeout=30,
             )
             logging.info(
                 "PostgreSQL connected to %s:%s/%s",

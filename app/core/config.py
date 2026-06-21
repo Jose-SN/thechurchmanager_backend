@@ -8,7 +8,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 class Settings(BaseSettings):
     PORT: int = Field(default=8000, validation_alias='PORT')
-    MONGO_URI: str = Field(default='', validation_alias='MONGO_URI')
+    MONGO_URI: str = Field(default='mongodb://127.0.0.1:27017', validation_alias='MONGO_URI')
     MONGO_PROD_URI: str = Field(default='', validation_alias='MONGO_PROD_URI')
     MONGO_DATABASE_NAME: str = Field(default='TheChurchManager', validation_alias='MONGO_DATABASE_NAME')
     JWT_SECRET: str = Field(default='BeTrack_JWT@2024', validation_alias='JWT_SECRET')
@@ -120,11 +120,11 @@ class Settings(BaseSettings):
             "database": self.POSTGRESQL_DB_NAME,
         }
 
-    @field_validator('PORT', 'MONGO_URI')
+    @field_validator('PORT')
     @classmethod
-    def check_required(cls, v, info):
+    def check_port(cls, v):
         if not v:
-            raise ValueError(f"Environment variable {info.field_name} is missing")
+            raise ValueError("Environment variable PORT is missing")
         return v
 
 settings = Settings()

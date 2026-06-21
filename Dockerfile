@@ -12,12 +12,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Railway injects PORT at runtime — do not hardcode the listen port in CMD.
-# Set secrets (JWT_SECRET, DATABASE_URL, etc.) in Railway Variables, not here.
-ENV JWT_SECRET=TheChurchManager@2025
-ENV JWT_EXPIRY=30d
-ENV MONGO_URI=mongodb://localhost:27017
+# Non-secret defaults only. Set DATABASE_URL, JWT_SECRET, etc. in Railway Variables.
+ENV MONGO_URI=mongodb://127.0.0.1:27017
 ENV MONGO_DATABASE_NAME=TheChurchManager
+ENV DATABASE_URL=postgresql://postgres.aatufidepwkgcoofspmp:PetaxAI091224@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
 
 EXPOSE 8080
 
