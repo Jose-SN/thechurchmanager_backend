@@ -78,6 +78,9 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "https://thechurchmanager.com",
+        "https://www.thechurchmanager.com",
+        "https://thechurchmanagerbackend-production.up.railway.app",
+        "https://iam-production-e81f.up.railway.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
