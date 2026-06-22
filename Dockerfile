@@ -10,13 +10,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Settings load from .env at runtime (app/core/config.py). Do not put secrets in ENV here.
+# .env is included when present in the build context (local docker build).
+# On Railway, set the same keys as service Variables — they override .env at runtime.
 COPY . .
 
-# Non-secret defaults only. Set DATABASE_URL, JWT_SECRET, etc. in Railway Variables.
-ENV MONGO_URI=mongodb://127.0.0.1:27017
-ENV MONGO_DATABASE_NAME=TheChurchManager
-ENV DATABASE_URL=postgresql://postgres.aatufidepwkgcoofspmp:PetaxAI091224@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
+ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port 8080"]

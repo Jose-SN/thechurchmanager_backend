@@ -3,6 +3,6 @@ __pycache__/
 *.pyo
 *.pyd
 .git
-.env
 .env.*
+!.env
 !.env.example
