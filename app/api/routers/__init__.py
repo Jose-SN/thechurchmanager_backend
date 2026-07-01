@@ -19,7 +19,7 @@ from .classes import class_router
 from .student import student_router
 from .account import account_router
 from .song import song_router
-from .rota import rota_router
+from .service_rota import router as service_rota_router
 from .rota_song import rota_song_router
 from .expense import expense_router
 from .checklist import router as checklist_router
@@ -51,7 +51,9 @@ router.include_router(class_router, prefix="/class")
 router.include_router(student_router, prefix="/student")
 router.include_router(account_router, prefix="/account")
 router.include_router(song_router, prefix="/song")
-router.include_router(rota_router, prefix="/rota")
+router.include_router(service_rota_router)
+# Legacy Mongo rota (deprecated — use service_rota module)
+# router.include_router(rota_router, prefix="/rota")
 router.include_router(rota_song_router, prefix="/rota-song")
 router.include_router(expense_router, prefix="/expense")
 router.include_router(checklist_router)

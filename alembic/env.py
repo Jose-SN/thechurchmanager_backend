@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from app.core.config import settings  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.checklist import models  # noqa: F401, E402
+from app.service_rota import models as service_rota_models  # noqa: F401, E402
 
 config = context.config
 

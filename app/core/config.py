@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     # IAM handled by separate service — disable local JWT gate until wired up
     IAM_AUTH_ENABLED: bool = Field(default=False, validation_alias='IAM_AUTH_ENABLED')
 
+    TEST_DATABASE_URL: str = Field(default='', validation_alias='TEST_DATABASE_URL')
+    ROTA_USE_MONGO: bool = Field(default=False, validation_alias='ROTA_USE_MONGO')
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding='utf-8',

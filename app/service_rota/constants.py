@@ -1,0 +1,6 @@
+SERVICE_STATUSES = ("draft", "published", "completed", "cancelled")
+AVAILABILITY_STATUSES = ("available", "available_all_day", "unavailable", "not_sure")
+ASSIGNMENT_STATUSES = ("assigned", "confirmed", "declined")
+ATTENDANCE_STATUSES = ("present", "absent", "late", "replacement", "pending")
+CLOCK_STATUSES = ("clocked_in", "completed")
+ROTA_ROLES = ("admin", "pastor", "team_head", "volunteer")
